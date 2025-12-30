@@ -10,6 +10,7 @@
         "slevesque.shader",
         "stevensona.shader-toy",
         "nathanj.cppcheck-plugin",
-        "shader-slang.slang-language-extension"
+        "shader-slang.slang-language-extension",
+        "skellock.just"
     ]
 }
