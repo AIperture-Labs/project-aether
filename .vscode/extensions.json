@@ -11,6 +11,7 @@
         "stevensona.shader-toy",
         "nathanj.cppcheck-plugin",
         "shader-slang.slang-language-extension",
-        "skellock.just"
+        "NathanJ.cppcheck-plugin",
+        "nefrob.vscode-just-syntax"
     ]
 }
