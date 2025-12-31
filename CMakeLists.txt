@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ standard to use")
 set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE BOOL "Require C++ standard")
 set(CMAKE_CXX_EXTENSIONS OFF CACHE BOOL "Disable compiler-specific extensions")
 
-#TODO: option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" FALSE)
+option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 
 option(ENABLE_SANITIZERS "Enable Address / Undefined / Thread Sanitizers" OFF)
 function(enable_sanitizers TARGET)
