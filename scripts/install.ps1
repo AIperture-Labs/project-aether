@@ -3,7 +3,7 @@ $REPO_PATH = $(Split-Path -Parent $(Split-Path -Parent $MyInvocation.MyCommand.D
 $DEPS = @(
     "Git.Git",
     "Microsoft.VisualStudioCode",
-    "Microsoft.VisualStudio.2026.BuildTools",
+    "Microsoft.VisualStudio.2022.BuildTools",
     "KhronosGroup.VulkanSDK"
     # "BaldurKarlsson.RenderDoc",
     # "Cppcheck.Cppcheck"
@@ -15,7 +15,7 @@ function Build-CmakeFormat {
 }
 
 function Install-MicrosoftBuildTools {
-    winget install Microsoft.VisualStudio.2026.BuildTools `
+    winget install Microsoft.VisualStudio.2022.BuildTools `
         --force --override "--wait --passive --config $REPO_PATH/configs/.vsconfig"
 }
 
