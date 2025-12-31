@@ -7,6 +7,8 @@
 - [ ] Enable C++20 modules
 - [ ] Add static or shared build
   - [ ] SDL3 -> Cmake option = BUILD_SHARED_LIBS
+- [ ] Update C++ version to 23
+- [ ] Update C version to 23
 
 ## Build System
 
