@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 add_executable(helloworld helloworld.cpp)
+enable_sanitizers(helloworld)
 
 # Register the HelloWorld executable as a CTest test
 if (ENABLE_TESTING)
