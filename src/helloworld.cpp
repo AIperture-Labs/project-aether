@@ -1,4 +1,4 @@
-// Copyright (c) 2025 OpenVoxel-Studio <xavier.beheydt@gmail.com>
+// Copyright (c) 2025 AIperture-Labs <xavier.beheydt@gmail.com>
 // SPDX-License-Identifier: MIT
 
 

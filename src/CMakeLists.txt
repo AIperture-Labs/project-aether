@@ -1,6 +1,9 @@
-# Copyright (c) 2025 OpenVoxel-Studio <xavier.beheydt@gmail.com>
+# Copyright (c) 2025 AIperture-Labs <xavier.beheydt@gmail.com>
 # SPDX-License-Identifier: MIT
 
+add_executable(helloworld helloworld.cpp)
 
-add_subdirectory(HelloWorld)
-add_subdirectory(HelloTriangle)
+# Register the HelloWorld executable as a CTest test
+if (ENABLE_TESTING)
+    add_test(NAME HelloWorldTest COMMAND helloworld)
+endif()

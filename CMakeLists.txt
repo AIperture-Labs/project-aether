@@ -6,16 +6,8 @@ cmake_minimum_required(VERSION 3.20)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(
-    vulkan-handbook
+    AetherEngine
     VERSION 0.1.0
 )
 
-
-include(project_settings)
-include(StaticAnalysers)
-include(Vulkan)
-#include(ShaderCompilation)
-# include(AddSpirvModules)
-
-# Sources
 add_subdirectory(src)
