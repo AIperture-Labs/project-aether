@@ -14,3 +14,6 @@
 - [VSCode CMake extension documentation](https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/README.md)
 - [CPPcheck website](https://cppcheck.sourceforge.io/)
 - [Vulkan SDK Website](https://vulkan.lunarg.com/)
+
+- [SDL3 Exhaustive examples](https://github.com/Ravbug/sdl3-sample)
+- [SDL3 Vulkan Documentation Section][https://wiki.libsdl.org/SDL3/CategoryVulkan]
