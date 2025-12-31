@@ -103,6 +103,7 @@ endif()
 
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(SDL3 CONFIG REQUIRED)
 
 # set up Vulkan C++ module only if enabled
 if(ENABLE_CPP20_MODULE)
