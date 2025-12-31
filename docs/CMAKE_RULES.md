@@ -84,3 +84,46 @@
 **Sanitizer** — Preset  
 ```json
 "CMAKE_CXX_FLAGS": "-fsanitize=address"
+```
+
+**Problematic library** — CMakeLists
+
+```cmake
+target_compile_options(badlib PRIVATE -fms-extensions)
+```
+
+**Debug symboles** — Preset
+
+```json
+"CMAKE_BUILD_TYPE": "RelWithDebInfo"
+```
+
+**Wrong placement** — ❌
+
+```cmake
+set(CMAKE_BUILD_TYPE Debug)  # Never in CMakeLists
+```
+
+---
+
+## 🧠 Mental Shortcuts
+
+```
+Does this describe WHAT the project IS? → CMakeLists
+Does this describe HOW I build it? → Preset
+```
+
+---
+
+## 🏗️ Best Practice for a Game Engine (Vulkan / vcpkg / VSCode)
+
+- CMakeLists.txt
+  - Strict
+  - Minimal
+  - Portable
+  - No machine-specific paths
+- CMakePresets.json
+  - Rich
+  - Multiple build variants
+  - Debug tools
+  - CI-ready
