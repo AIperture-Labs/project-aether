@@ -18,7 +18,7 @@
             },
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "AETHER_ENABLE_SANITIZERS": "OFF",
+                "ENABLE_SANITIZERS": "OFF",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
             }
         },
@@ -62,7 +62,7 @@
             "description": "x64 build using Clang in Debug mode with sanitizers enabled",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "AETHER_ENABLE_SANITIZERS": "ON"
+                "ENABLE_SANITIZERS": "ON"
             }
         },
         {
@@ -95,7 +95,7 @@
             "description": "x64 build using clang-cl in Debug mode with sanitizers enabled",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "AETHER_ENABLE_SANITIZERS": "ON"
+                "ENABLE_SANITIZERS": "ON"
             }
         },
         {
