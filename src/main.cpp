@@ -5,33 +5,70 @@
 import vulkan_hpp;
 #endif
 
-// #define SDL_MAIN_USE_CALLBACKS // This is necessary for the new callbacks API. To use the legacy API, don't define
-// this.
 #include <SDL3/SDL.h>
-// #include <SDL3/SDL_init.h>
-// #include <SDL3/SDL_main.h>
-// #include <SDL3/SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 
-SDL_AppResult SDL_Fail() {
-    SDL_LogError(SDL_LOG_CATEGORY_CUSTOM, "Error %s", SDL_GetError());
-    return SDL_APP_FAILURE;
-}
+/**
+ * @class SDLException
+ * @brief Exception class for SDL-related errors.
+ *
+ * This exception is thrown when an SDL function fails. It appends the SDL error message
+ * (from SDL_GetError()) to the provided message.
+ */
+class SDLException : public std::runtime_error {
+   public:
+    /**
+     * @brief Constructs an SDLException with a custom message and the SDL error string.
+     * @param message The custom error message.
+     */
+    explicit SDLException(const std::string& message) : std::runtime_error(message + '\n' + SDL_GetError()) {}
+};
 
 class HelloTriangleApplication {
-  private:
-    void initWindow() {
-        if (not SDL_Init(SDL_INIT_VIDEO))
-            throw std::runtime_error(SDL_GetError());
-    }
-    void initVulkan() {}
-    void mainLoop() {}
-    void cleanup() {}
+   private:
+    static constexpr uint16_t WINDOW_WIDTH = 800;
+    static constexpr uint16_t WINDOW_HEIGHT = 600;
+    static constexpr SDL_WindowFlags window_flags =
+        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+    SDL_Window* window = nullptr;
+    bool shouldBeClose = false;
 
-  public:
+    void initWindow() {
+        if (not SDL_Init(SDL_INIT_VIDEO)) throw SDLException("SDL_Init failed");
+
+        window = SDL_CreateWindow("Aether Game Engine", WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
+        if (window == nullptr) throw SDLException("SDL_CreateWindow failed");
+
+        SDL_ShowWindow(window);
+    }
+
+    void initVulkan() {}
+
+    void mainLoop() {
+        while (not shouldBeClose) {
+            for (SDL_Event event; SDL_PollEvent(&event);) {
+                switch (event.type) {
+                    case SDL_EVENT_QUIT:
+                        shouldBeClose = true;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
+    void cleanup() {
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+    }
+
+   public:
     void run() {
         initWindow();
         initVulkan();
@@ -40,15 +77,12 @@ class HelloTriangleApplication {
     }
 };
 
-// Replace main with SDL3.
-// SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 int main() {
-    SDL_Log("%s", "Hello SDL!");
     HelloTriangleApplication app;
 
     try {
         app.run();
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
