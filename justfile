@@ -5,7 +5,7 @@ remove := if os_family() == "windows" { "rm -Force" } else { "rm -fr" }
 
 # Install dependencies
 install:
-    ./scripts/install.{{ext}}
+    ./tools/dev/bootstrap.{{ext}}
 
 # Clean CMake project configuration
 clean-out:
