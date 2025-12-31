@@ -5,6 +5,8 @@
 - [ ] Move all settings in configs folder if is possible
   - [ ] create sub folders eg: dev for .vsconfig
 - [ ] Enable C++20 modules
+- [ ] Add static or shared build
+  - [ ] SDL3 -> Cmake option = BUILD_SHARED_LIBS
 
 ## Build System
 
