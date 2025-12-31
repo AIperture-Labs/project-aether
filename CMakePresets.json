@@ -1,9 +1,14 @@
 {
-    "version": 8,
+    "version": 10,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
     "configurePresets": [
         {
             "name": "base",
-            "description": "Common configuration settings for all Windows builds using Ninja and vcpkg.",
+            "description": "Base preset for all compilers",
             "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
@@ -11,108 +16,225 @@
             "environment": {
                 "VCPKG_FEATURE_FLAGS": "manifests,versions,binarycaching,registries"
             },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
-            },
             "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "$env{ProgramFiles(x86)}/Microsoft Visual Studio/2022/BuildTools/VC/Tools/Llvm/x64/bin/clang.exe",
-                "CMAKE_CXX_COMPILER": "$env{ProgramFiles(x86)}/Microsoft Visual Studio/2022/BuildTools/VC/Tools/Llvm/x64/bin/clang++.exe",
-                "ENABLE_CLANG_TIDY": true,
-                "ENABLE_CPPCHECK": true,
-                "ENABLE_TESTING": true,
-                "ENABLE_COVERAGE": true
-            },
-            "vendor": {
-                "microsoft.com/VisualStudioSettings/CMake/1.0": {
-                    "clangTidyChecks": "llvm-include-order, -modernize-use-override",
-                    "enableMicrosoftCodeAnalysis": true,
-                    "enableClangTidyCodeAnalysis": true
-                }
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "AETHER_ENABLE_SANITIZERS": "OFF",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
             }
         },
         {
-            "name": "x64-debug",
+            "name": "base-clang",
             "inherits": "base",
+            "description": "Clang native (Linux / Windows)",
+            "hidden": true,
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_C_FLAGS": "-fcolor-diagnostics",
+                "CMAKE_CXX_FLAGS": "-fcolor-diagnostics"
             }
         },
         {
-            "name": "x64-asan-debug",
-            "inherits": "x64-debug",
+            "name": "base-clang-cl",
+            "inherits": "base",
+            "description": "Clang-cl on Windows (MSVC style)",
+            "hidden": true,
             "cacheVariables": {
-                "ENABLE_ASAN": true
+                "CMAKE_C_COMPILER": "clang-cl",
+                "CMAKE_CXX_COMPILER": "clang-cl",
+                "CMAKE_C_FLAGS": "/diagnostics:color",
+                "CMAKE_CXX_FLAGS": "/diagnostics:color"
             }
         },
         {
-            "name": "x64-release",
-            "inherits": "x64-debug",
+            "name": "base-msvc",
+            "inherits": "base",
+            "description": "MSVC native (Windows)",
+            "hidden": true,
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "ENABLE_ASAN": false,
-                "ENABLE_CLANG_TIDY": false,
-                "ENABLE_CPPCHECK": false,
-                "ENABLE_TESTING": false,
-                "ENABLE_COVERAGE": false
+                "CMAKE_C_FLAGS": "/diagnostics:color",
+                "CMAKE_CXX_FLAGS": "/diagnostics:color"
             }
         },
         {
-            "name": "x64-minsizerel",
-            "inherits": "x64-release",
+            "name": "x64-debug-clang",
+            "inherits": "base-clang",
+            "description": "x64 build using Clang in Debug mode with sanitizers enabled",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "AETHER_ENABLE_SANITIZERS": "ON"
+            }
+        },
+        {
+            "name": "x64-release-clang",
+            "inherits": "base-clang",
+            "description": "x64 build using Clang in Release mode",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "x64-relwithdebinfo-clang",
+            "inherits": "base-clang",
+            "description": "x64 build using Clang in RelWithDebInfo mode",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "x64-minsizerel-clang",
+            "inherits": "base-clang",
+            "description": "x64 build using Clang in MinSizeRel mode",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "MinSizeRel"
             }
         },
         {
-            "name": "x64-relwithdebinfo",
-            "inherits": "x64-debug",
+            "name": "x64-debug-clang-cl",
+            "inherits": "base-clang-cl",
+            "description": "x64 build using clang-cl in Debug mode with sanitizers enabled",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "AETHER_ENABLE_SANITIZERS": "ON"
+            }
+        },
+        {
+            "name": "x64-release-clang-cl",
+            "inherits": "base-clang-cl",
+            "description": "x64 build using clang-cl in Release mode",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "x64-relwithdebinfo-clang-cl",
+            "inherits": "base-clang-cl",
+            "description": "x64 build using clang-cl in RelWithDebInfo mode",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "x64-minsizerel-clang-cl",
+            "inherits": "base-clang-cl",
+            "description": "x64 build using clang-cl in MinSizeRel mode",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
+            }
+        },
+        {
+            "name": "x64-debug-msvc",
+            "inherits": "base-msvc",
+            "description": "x64 build using MSVC in Debug mode",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "x64-release-msvc",
+            "inherits": "base-msvc",
+            "description": "x64 build using MSVC in Release mode",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "x64-relwithdebinfo-msvc",
+            "inherits": "base-msvc",
+            "description": "x64 build using MSVC in RelWithDebInfo mode",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "name": "x64-minsizerel-msvc",
+            "inherits": "base-msvc",
+            "description": "x64 build using MSVC in MinSizeRel mode",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "MinSizeRel"
             }
         }
     ],
     "buildPresets": [
         {
-            "name": "x64-debug-verbose",
-            "displayName": "Verbose",
-            "configurePreset": "x64-debug",
+            "name": "verbose",
+            "hidden": true,
+            "description": "Verbose build: pass -v to the native build tool",
             "nativeToolOptions": [
                 "-v"
             ]
         },
         {
-            "name": "x64-asan-debug-verbose",
-            "displayName": "ASAN Debug Verbose",
-            "configurePreset": "x64-asan-debug",
-            "nativeToolOptions": [
-                "-v"
-            ]
+            "name": "x64-debug-clang-verbose",
+            "configurePreset": "x64-debug-clang",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-debug-clang"
         },
         {
-            "name": "x64-relwithdebinfo-verbose",
-            "displayName": "RelWithDebInfo Verbose",
-            "configurePreset": "x64-relwithdebinfo",
-            "nativeToolOptions": [
-                "-v"
-            ]
+            "name": "x64-release-clang-verbose",
+            "configurePreset": "x64-release-clang",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-release-clang"
         },
         {
-            "name": "x64-release",
-            "displayName": "Release",
-            "configurePreset": "x64-release"
+            "name": "x64-relwithdebinfo-clang-verbose",
+            "configurePreset": "x64-relwithdebinfo-clang",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-relwithdebinfo-clang"
         },
         {
-            "name": "x64-minsizerel",
-            "displayName": "MinSizeRel",
-            "configurePreset": "x64-minsizerel"
+            "name": "x64-minsizerel-clang-verbose",
+            "configurePreset": "x64-minsizerel-clang",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-minsizerel-clang"
         },
         {
-            "name": "x64-relwithdebinfo",
-            "displayName": "RelWithDebInfo",
-            "configurePreset": "x64-relwithdebinfo"
+            "name": "x64-debug-clang-cl-verbose",
+            "configurePreset": "x64-debug-clang-cl",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-debug-clang-cl"
+        },
+        {
+            "name": "x64-release-clang-cl-verbose",
+            "configurePreset": "x64-release-clang-cl",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-release-clang-cl"
+        },
+        {
+            "name": "x64-relwithdebinfo-clang-cl-verbose",
+            "configurePreset": "x64-relwithdebinfo-clang-cl",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-relwithdebinfo-clang-cl"
+        },
+        {
+            "name": "x64-minsizerel-clang-cl-verbose",
+            "configurePreset": "x64-minsizerel-clang-cl",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-minsizerel-clang-cl"
+        },
+        {
+            "name": "x64-debug-msvc-verbose",
+            "configurePreset": "x64-debug-msvc",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-debug-msvc"
+        },
+        {
+            "name": "x64-release-msvc-verbose",
+            "configurePreset": "x64-release-msvc",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-release-msvc"
+        },
+        {
+            "name": "x64-relwithdebinfo-msvc-verbose",
+            "configurePreset": "x64-relwithdebinfo-msvc",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-relwithdebinfo-msvc"
+        },
+        {
+            "name": "x64-minsizerel-msvc-verbose",
+            "configurePreset": "x64-minsizerel-msvc",
+            "inherits": "verbose",
+            "description": "Verbose build for x64-minsizerel-msvc"
         }
     ]
 }
