@@ -6,7 +6,7 @@ $DEPS = @(
     "Microsoft.VisualStudio.2022.BuildTools",
     "KhronosGroup.VulkanSDK"
     # "BaldurKarlsson.RenderDoc",
-    # "Cppcheck.Cppcheck"
+    "Cppcheck.Cppcheck"
 )
 
 # Functions
@@ -39,7 +39,7 @@ foreach ($Dep in $DEPS) {
     }
     elseif ($Dep -like "*Cppcheck*") {
         winget install $Dep
-        # Set-PathVar -Path "$env:ProgramFiles\Cppcheck"
+        Set-PathVar -Path "$env:ProgramFiles\Cppcheck"
     }
     else {
         winget install $Dep
