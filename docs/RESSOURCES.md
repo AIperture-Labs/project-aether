@@ -17,3 +17,5 @@
 
 - [SDL3 Exhaustive examples](https://github.com/Ravbug/sdl3-sample)
 - [SDL3 Vulkan Documentation Section][https://wiki.libsdl.org/SDL3/CategoryVulkan]
+
+- [Blog Moonside Games](https://moonside.games/)
