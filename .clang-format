@@ -28,4 +28,8 @@ EmptyLineAfterIncludes: true
 AlignAfterOpenBracket: 'Align'
 BinPackArguments: false
 BinPackParameters: false
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+PointerAlignment: Right
+ReferenceAlignment: Right
 ---
