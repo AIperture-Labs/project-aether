@@ -2,6 +2,15 @@
 // SPDX-License-Identifier: MIT
 
 // main.cpp
+#include <vulkan/vulkan_core.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+#include "vulkan/vulkan.hpp"
+
 #if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULE)
 #include <vulkan/vulkan_raii.hpp>
 #else
@@ -13,6 +22,7 @@ import vulkan_hpp;
 
 #include <cstdlib>
 #include <iostream>
+#include <map>
 #include <stdexcept>
 
 const std::vector<char const *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
@@ -52,6 +62,14 @@ class HelloTriangleApplication {
     vk::raii::Context                context;
     vk::raii::Instance               instance       = nullptr;
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
+    vk::raii::PhysicalDevice         physicalDevice = nullptr;
+
+    std::vector<const char *> deviceExtensions = {
+        vk::KHRSwapchainExtensionName,
+        vk::KHRSpirv14ExtensionName,
+        vk::KHRSynchronization2ExtensionName,
+        vk::KHRCreateRenderpass2ExtensionName,
+    };
 
     void initWindow() {
         if (not SDL_Init(SDL_INIT_VIDEO)) throw SDLException("SDL_Init failed");
@@ -106,6 +124,7 @@ class HelloTriangleApplication {
     void initVulkan() {
         createInstance();
         setupDebugMessenger();
+        pickPhysicalDevice();
     }
 
     void setupDebugMessenger() {
@@ -128,6 +147,60 @@ class HelloTriangleApplication {
         vk::DebugUtilsMessengerCreateInfoEXT  debugUtilsMessengerCreateInfoEXT{
              .messageSeverity = severityFlags, .messageType = messageTypeFlags, .pfnUserCallback = &debugCallback};
         debugMessenger = instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
+    }
+
+    // This is an example how I could design my device selection.
+    void examplePickPhysicalDevice() {
+        auto devices = instance.enumeratePhysicalDevices();
+        if (devices.empty()) throw std::runtime_error("failed to find GPUs with Vulkan support!");
+
+        std::multimap<int, vk::raii::PhysicalDevice> candidates;
+
+        for (const auto &device : devices) {
+            auto     deviceProperties = device.getProperties();
+            auto     deviceFeatures   = device.getFeatures();
+            uint32_t score            = 0;
+
+            // Discrete GPUs have a significante performance advantage
+            if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) score += 1000;
+
+            // Maximum possible size of textures affects graphics quality
+            score += deviceProperties.limits.maxImageDimension2D;
+
+            // Application can't function without geometry shaders
+            if (not deviceFeatures.geometryShader) continue;
+            candidates.insert(std::make_pair(score, device));
+        }
+
+        // Check if the best candidate is suitable at all
+        if (candidates.rbegin()->first > 0)
+            physicalDevice = candidates.rbegin()->second;
+        else
+            throw std::runtime_error("failed to find a suitable GPU!");
+    }
+
+    void pickPhysicalDevice() {
+        std::vector<vk::raii::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
+        const auto                            devIter = std::ranges::find_if(devices, [&](auto const &device) {
+            auto       queueFamilies = device.getQueueFamilyProperties();
+            bool       isSuitable = device.getProperties().apiVersion >= VK_API_VERSION_1_3;
+            const auto qfpIter = std::ranges::find_if(queueFamilies, [](vk::QueueFamilyProperties const &qfp) {
+                return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
+                ;
+            });
+            isSuitable      = isSuitable && (qfpIter != queueFamilies.end());
+            auto extensions = device.enumerateDeviceExtensionProperties();
+            bool found      = true;
+            for (auto const &extension : deviceExtensions) {
+                auto extensionIter = std::ranges::find_if(
+                    extensions, [extension](auto const &ext) { return strcmp(ext.extensionName, extension) == 0; });
+                found = found && extensionIter != extensions.end();
+            }
+            isSuitable = isSuitable && found;
+            if (isSuitable) physicalDevice = device;
+            return isSuitable;
+        });
+        if (devIter == devices.end()) throw std::runtime_error("failed to find a suitable GPU!");
     }
 
     void mainLoop() {
@@ -166,9 +239,19 @@ class HelloTriangleApplication {
                                                           vk::DebugUtilsMessageTypeFlagsEXT             type,
                                                           const vk::DebugUtilsMessengerCallbackDataEXT *pCallbackData,
                                                           void *) {
-        std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage << std::endl;
+        if (severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eError ||
+            severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)
+            std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage
+                      << std::endl;
 
         return vk::False;
+    }
+
+    bool isDeviceSuitable(vk::raii::PhysicalDevice physicalDevice) {
+        auto deviceProperties = physicalDevice.getProperties();
+        auto deviceFeatures   = physicalDevice.getFeatures();
+
+        return (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && deviceFeatures.geometryShader);
     }
 
    public:
