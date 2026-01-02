@@ -29,4 +29,7 @@ InlayHints:
   TypeNameLimit: 24
 
 Completion:
+  AllScopes: Yes
+  ArgumentLists: FullPlaceholders
   HeaderInsertion: IWYU
+  CodePatterns: All
