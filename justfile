@@ -10,3 +10,19 @@ install:
 # Clean CMake project configuration
 clean-out:
     {{remove}} out/
+
+# Clean Clangd cache
+clean-clangd:
+    {{remove}} .cache/
+    {{remove}} compile_commands.json
+
+# Clean all build, cache and artifact files
+clean-all: clean-out clean-clangd
+
+cppcheck:
+    cppcheck --project=cppcheck.cfg src/
+
+clang-tidy:
+    clang-tidy -p out/build/ src/*.cpp
+
+static-analyzers: cppcheck clang-tidy
