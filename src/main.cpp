@@ -15,6 +15,14 @@ import vulkan_hpp;
 #include <iostream>
 #include <stdexcept>
 
+const std::vector<char const *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
+
+#if defined(_DEBUG)
+constexpr bool enableValidationLayers = true;
+#else
+constexpr bool enableValidationLayers = false;
+#endif
+
 /**
  * @class SDLException
  * @brief Exception class for SDL-related errors.
@@ -40,9 +48,10 @@ class HelloTriangleApplication {
     static constexpr SDL_WindowFlags window_flags =
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
-    SDL_Window        *window = nullptr;
-    vk::raii::Context  context;
-    vk::raii::Instance instance = nullptr;
+    SDL_Window                      *window = nullptr;
+    vk::raii::Context                context;
+    vk::raii::Instance               instance       = nullptr;
+    vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
 
     void initWindow() {
         if (not SDL_Init(SDL_INIT_VIDEO)) throw SDLException("SDL_Init failed");
@@ -57,39 +66,69 @@ class HelloTriangleApplication {
                                               .pEngineName        = "Aether Game Engine",
                                               .apiVersion         = vk::ApiVersion14};
 
-        uint32_t sdlExtensionCount = 0;
-        auto     sdlExtensions     = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
-        if (sdlExtensions == nullptr) throw SDLException("SDL_Vulkan_GetInstanceExtensions failed");
+        // Get the required layers
+        std::vector<char const *> requiredLayers;
+        if (enableValidationLayers) {
+            requiredLayers.assign(validationLayers.begin(), validationLayers.end());
+        }
 
-#if defined(_DEBUG)
-        // Retrieve a list of supported extensions
-        auto extensions = context.enumerateInstanceExtensionProperties();
-        std::cout << "Available extensions:" << std::endl;
-        for (const auto &extension : extensions) std::cout << '\t' << extension.extensionName << std::endl;
+        // Check if the required layers are supported by the Vulkan implementation.
+        auto layerProperties = context.enumerateInstanceLayerProperties();
+        if (std::ranges::any_of(requiredLayers, [&layerProperties](auto const &requiredLayer) {
+                return std::ranges::none_of(layerProperties, [requiredLayer](auto const &layerProperty) {
+                    return strcmp(layerProperty.layerName, requiredLayer) == 0;
+                });
+            }))
+            throw std::runtime_error("One or more required layers are not supported!");
 
-        std::cout << "SDL Extensions: " << std::endl;
-        for (uint8_t i = 0; i < sdlExtensionCount; i++) std::cout << '\t' << sdlExtensions[i] << std::endl;
-#endif
+        // Get the required extensions.
+        auto requiredExtensions = getRequiredExtensions();
+
         // Check if the required SDL extensions are supported by the Vulkan implementation.
         auto extensionProperties = context.enumerateInstanceExtensionProperties();
-        for (uint8_t i = 0; i < sdlExtensionCount; ++i) {
-            if (std::ranges::none_of(extensionProperties,
-                                     [sdlExtension = sdlExtensions[i]](auto const &extensionProperty) {
-                                         return strcmp(extensionProperty.extensionName, sdlExtension) == 0;
-                                     })) {
-                throw std::runtime_error("Required SDL extension not supported: " + std::string(sdlExtensions[i]));
+        for (auto const &requiredExtension : requiredExtensions) {
+            if (std::ranges::none_of(extensionProperties, [requiredExtension](auto const &extensionProperty) {
+                    return strcmp(extensionProperty.extensionName, requiredExtension) == 0;
+                })) {
+                throw std::runtime_error("Required extension not supported: " + std::string(requiredExtension));
             }
         }
 
         vk::InstanceCreateInfo createInfo{.pApplicationInfo        = &appInfo,
-                                          .enabledExtensionCount   = sdlExtensionCount,
-                                          .ppEnabledExtensionNames = sdlExtensions};
-
+                                          .enabledLayerCount       = static_cast<uint32_t>(requiredLayers.size()),
+                                          .ppEnabledLayerNames     = requiredLayers.data(),
+                                          .enabledExtensionCount   = static_cast<uint32_t>(requiredExtensions.size()),
+                                          .ppEnabledExtensionNames = requiredExtensions.data()};
 
         instance = vk::raii::Instance(context, createInfo);
     }
 
-    void initVulkan() { createInstance(); }
+    void initVulkan() {
+        createInstance();
+        setupDebugMessenger();
+    }
+
+    void setupDebugMessenger() {
+        if (not enableValidationLayers) return;
+
+        /*
+         There are a lot more settings for the behavior of validation layers than
+         just the flags specified in the VkDebugUtilsMessengerCreateInfoEXT
+         struct. Browse to the Vulkan SDK and go to the Config directory. There
+         you will find a vk_layer_settings.txt file that explains how to
+         configure the layers.
+        */
+
+        vk::DebugUtilsMessageSeverityFlagsEXT severityFlags(vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+                                                            vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+                                                            vk::DebugUtilsMessageSeverityFlagBitsEXT::eError);
+        vk::DebugUtilsMessageTypeFlagsEXT     messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+                                                           vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
+                                                           vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
+        vk::DebugUtilsMessengerCreateInfoEXT  debugUtilsMessengerCreateInfoEXT{
+             .messageSeverity = severityFlags, .messageType = messageTypeFlags, .pfnUserCallback = &debugCallback};
+        debugMessenger = instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
+    }
 
     void mainLoop() {
         SDL_ShowWindow(window);
@@ -111,6 +150,25 @@ class HelloTriangleApplication {
     void cleanup() {
         SDL_DestroyWindow(window);
         SDL_Quit();
+    }
+
+    std::vector<const char *> getRequiredExtensions() {
+        uint32_t sdlExtensionCount = 0;
+        auto     sdlExtensions     = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
+
+        std::vector extensions(sdlExtensions, sdlExtensions + sdlExtensionCount);
+        if (enableValidationLayers) extensions.push_back(vk::EXTDebugUtilsExtensionName);
+
+        return extensions;
+    }
+
+    static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT      severity,
+                                                          vk::DebugUtilsMessageTypeFlagsEXT             type,
+                                                          const vk::DebugUtilsMessengerCallbackDataEXT *pCallbackData,
+                                                          void *) {
+        std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage << std::endl;
+
+        return vk::False;
     }
 
    public:
