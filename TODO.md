@@ -9,6 +9,10 @@
   - [ ] SDL3 -> Cmake option = BUILD_SHARED_LIBS
 - [ ] Update C++ version to 23
 - [ ] Update C version to 23
+- [ ] Switch to clangd
+  - [ ] setting clang-tidy
+  - [x] Tweak cmake to create a symlink or a copy of compile_commands.json from selected preset
+  - [ ] Just clean the compile_commands.json
 
 ## Build System
 
