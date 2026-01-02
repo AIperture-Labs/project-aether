@@ -11,7 +11,5 @@
         ]
     },
     "slang.slangdLocation": "${env:VULKAN_SDK}/Bin/slangd.exe",
-    "C_Cpp.inlayHints.parameterNames.enabled": true,
-    "C_Cpp.inlayHints.autoDeclarationTypes.enabled": true,
-    "editor.inlayHints.enabled": "on"
+    "editor.inlayHints.enabled": "on",
 }

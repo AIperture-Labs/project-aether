@@ -12,6 +12,8 @@
         "nathanj.cppcheck-plugin",
         "shader-slang.slang-language-extension",
         "NathanJ.cppcheck-plugin",
-        "nefrob.vscode-just-syntax"
+        "nefrob.vscode-just-syntax",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "redhat.vscode-yaml"
     ]
 }

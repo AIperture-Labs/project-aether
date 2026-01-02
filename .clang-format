@@ -12,7 +12,6 @@ ColumnLimit: 120
 BasedOnStyle: Google
 IndentWidth: 4
 SortIncludes: true
-EmptyLineAfterIncludes: true
 
 # This causes parameters on continuations to align to the opening brace.
 #
@@ -32,4 +31,3 @@ AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 PointerAlignment: Right
 ReferenceAlignment: Right
----

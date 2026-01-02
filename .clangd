@@ -1,0 +1,32 @@
+# Configuration of clangd
+# =============================
+#
+# Documentation: https://clangd.llvm.org/config
+#
+# TODO: finish the settings
+
+CompileFlags:
+  CompilationDatabase: .
+  BuiltinHeaders: QueryDriver
+  Add:
+    - -std=c++20
+    - -Wall
+    - -Wextra
+
+Diagnostics:
+  UnusedIncludes: Strict
+
+Index:
+  Background: Build
+
+InlayHints:
+  BlockEnd: false
+  Designators: true
+  Enabled: true
+  ParameterNames: true
+  DeducedTypes: true
+  DefaultArguments: false # clangd 20
+  TypeNameLimit: 24
+
+Completion:
+  HeaderInsertion: IWYU

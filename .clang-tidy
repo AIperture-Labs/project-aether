@@ -1,13 +1,32 @@
-# Copyright (c) 2025 Xavier Beheydt <xavier.beheydt@gmail.com>
- 
 # Configuration of clang-tidy
 # =============================
+#
+# Documentation: https://clang.llvm.org/extra/clang-tidy/
+#
+# TODO: finish the settings
 
 ---
-Checks : "*"
-FormatStyle: none
-HeaderFileExtensions:         ['', 'h','hh','hpp','hxx']
-HeaderFilterRegex: ''
-ImplementationFileExtensions: ['c','cc','cpp','cxx']
-InheritParentConfig: true
----
+Checks: >
+  *,
+  -llvm-header-guard,
+  modernize-*,
+  performance-*,
+  readability-*,
+  bugprone-*,
+  cppcoreguidelines-*,
+  misc-*
+WarningsAsErrors: '*'
+HeaderFilterRegex: 'src/.*|include/.*'
+# AnalyzeTemporaryDtors: true
+FormatStyle: file
+CheckOptions:
+  - key: modernize-use-auto.MinTypeNameLength
+    value: '0'
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: cppcoreguidelines-pro-type-reinterpret-cast.WarnOnCastAlign
+    value: 'true'

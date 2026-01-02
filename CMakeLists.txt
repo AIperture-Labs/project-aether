@@ -209,4 +209,31 @@ function(add_slang_shader_target TARGET)
     add_custom_target(${TARGET} DEPENDS ${SHADERS_DIR}/slang.spv)
 endfunction()
 
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    set(CCDB_SRC "${CMAKE_BINARY_DIR}/compile_commands.json")
+    set(CCDB_DST "${CMAKE_SOURCE_DIR}/compile_commands.json")
+
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+                "${CCDB_SRC}"
+                "${CCDB_DST}"
+        RESULT_VARIABLE SYMLINK_RESULT
+        ERROR_QUIET
+    )
+
+    if(NOT SYMLINK_RESULT EQUAL 0)
+        message(STATUS
+            "Symlink for compile_commands.json failed (Windows privileges). "
+            "Falling back to copy."
+        )
+
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${CCDB_SRC}"
+                    "${CCDB_DST}"
+        )
+    endif()
+endif()
+
+
 add_subdirectory(src)
