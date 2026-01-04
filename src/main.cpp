@@ -172,6 +172,13 @@ class HelloTriangleApplication {
         debugMessenger = instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
     }
 
+    void createSurface() {
+        VkSurfaceKHR _surface;
+        if (SDL_Vulkan_CreateSurface(window, *instance, nullptr, &_surface) != 0)
+            throw std::runtime_error("failed to create window surface!");
+        surface = vk::raii::SurfaceKHR(instance, _surface);
+    }
+
     // This is an example how I could design my device selection.
     void examplePickPhysicalDevice() {
         auto devices = instance.enumeratePhysicalDevices();
@@ -297,36 +304,64 @@ class HelloTriangleApplication {
     // }
 
     void createLogicalDevice() {
+        // find the index of the first queue family that supports graphics
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
 
         // get the first index into queueFamilyProperties which supports graphics
         auto graphicsQueueFamilyProperty = std::ranges::find_if(queueFamilyProperties, [](auto const &qfp) {
             return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
         });
-        assert(graphicsQueueFamilyProperty != queueFamilyProperties.end() && "No graphics queue family found!");
 
         auto graphicsIndex =
             static_cast<uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
 
-        // Create a chain of feature structures
-        // XXX: Check if Vulkan 1.3 features can be upgraded to 1.4
-        vk::StructureChain<vk::PhysicalDeviceFeatures2,
-                           vk::PhysicalDeviceVulkan13Features,
-                           vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
-            featureChain = {
-                {},                             // vk::PhysicalDeviceFeatures2 (empty for now)
-                {.dynamicRendering = true},     // Enable dynamic rendering from Vulkan 1.3
-                {.extendedDynamicState = true}  // Enable extended dynamic state from the extension
-            };
+        // determine a queueFamilyIndex that supports present
+        // first check if the graphicsIndex is good enough
+        auto presentIndex = physicalDevice.getSurfaceSupportKHR(graphicsIndex, *surface)
+                                ? graphicsIndex
+                                : static_cast<uint32_t>(queueFamilyProperties.size());
+        if (presentIndex == queueFamilyProperties.size()) {
+            // the graphicsIndex doesn't support present -> look for another family index that supports both
+            // graphics and present
+            for (size_t i = 0; i < queueFamilyProperties.size(); i++) {
+                if ((queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics) &&
+                    physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface)) {
+                    graphicsIndex = static_cast<uint32_t>(i);
+                    presentIndex  = graphicsIndex;
+                    break;
+                }
+            }
+            if (presentIndex == queueFamilyProperties.size()) {
+                // there's nothing like a single family index that supports both graphics and present -> look for
+                // another family index that supports present
+                for (size_t i = 0; i < queueFamilyProperties.size(); i++) {
+                    if (physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface)) {
+                        presentIndex = static_cast<uint32_t>(i);
+                        break;
+                    }
+                }
+            }
+        }
+        if ((graphicsIndex == queueFamilyProperties.size()) || (presentIndex == queueFamilyProperties.size())) {
+            throw std::runtime_error("Could not find a queue for graphics or present -> terminating");
+        }
 
+        // query for Vulkan 1.3 features
+        auto                                              features = physicalDevice.getFeatures2();
+        vk::PhysicalDeviceVulkan13Features                vulkan13Features;
+        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT extendedDynamicStateFeatures;
+        vulkan13Features.dynamicRendering                 = vk::True;
+        extendedDynamicStateFeatures.extendedDynamicState = vk::True;
+        vulkan13Features.pNext                            = &extendedDynamicStateFeatures;
+        features.pNext                                    = &vulkan13Features;
+        // create a Device
         float                     queuePriority = 0.5f;
         vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
             .queueFamilyIndex = graphicsIndex, .queueCount = 1, .pQueuePriorities = &queuePriority};
-        vk::DeviceCreateInfo deviceCreateInfo{.pNext                 = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
-                                              .queueCreateInfoCount  = 1,
-                                              .pQueueCreateInfos     = &deviceQueueCreateInfo,
-                                              .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
-                                              .ppEnabledExtensionNames = deviceExtensions.data()};
+        vk::DeviceCreateInfo deviceCreateInfo{
+            .pNext = &features, .queueCreateInfoCount = 1, .pQueueCreateInfos = &deviceQueueCreateInfo};
+        deviceCreateInfo.enabledExtensionCount   = deviceExtensions.size();
+        deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
         device        = vk::raii::Device(physicalDevice, deviceCreateInfo);
         graphicsQueue = vk::raii::Queue(device, graphicsIndex, 0);
