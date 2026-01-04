@@ -1,33 +1,56 @@
-# Copyright (c) 2025 OpenVoxel-Studio <xavier.beheydt@gmail.com>
+# Copyright (c) 2025 AIperture-Labs <xavier.beheydt@gmail.com>
 # SPDX-License-Identifier: MIT
-
- 
-# Configuration of clang-format
-# =============================
 
 ---
 Language: Cpp
+Standard: c++20
 
-ColumnLimit: 120
 BasedOnStyle: Google
 IndentWidth: 4
-SortIncludes: true
+ColumnLimit: 120
 
-# This causes parameters on continuations to align to the opening brace.
-#
-#   like_this_long_name(parameter_one,
-#                       parameter_two,
-#                       parameter_three);
-#
-# Instead of:
-#
-#   like_this_long_name(parameter_one, parameter_two, parameter_three, parameter_four,
-#                       parameter_five, parameter_six);
-#
-AlignAfterOpenBracket: 'Align'
+# Includes
+SortIncludes: true
+IncludeBlocks: Regroup
+
+# Line breaking / wrapping
+AlignAfterOpenBracket: Align
 BinPackArguments: false
 BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# Initializers & C++20
+Cpp11BracedListStyle: true
+SpaceBeforeCpp11BracedList: false
+
+# Braces (engine / Vulkan friendly)
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterStruct: true
+  AfterClass: true
+  AfterFunction: true
+  AfterControlStatement: true
+  BeforeElse: true
+
+# Short statements → NEVER (lisibilité moteur)
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Alignment
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
+AlignOperands: true
+AlignTrailingComments: true
+
+# Pointers & references
 PointerAlignment: Right
 ReferenceAlignment: Right
+
+# Misc engine hygiene
+SortUsingDeclarations: true
+AlwaysBreakTemplateDeclarations: Yes
+BreakConstructorInitializers: AfterColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: false

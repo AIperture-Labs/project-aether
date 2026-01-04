@@ -34,16 +34,20 @@ constexpr bool enableValidationLayers = false;
  * This exception is thrown when an SDL function fails. It appends the SDL error message
  * (from SDL_GetError()) to the provided message.
  */
-class SDLException : public std::runtime_error {
+class SDLException : public std::runtime_error
+{
    public:
     /**
      * @brief Constructs an SDLException with a custom message and the SDL error string.
      * @param message The custom error message.
      */
-    explicit SDLException(const std::string &message) : std::runtime_error(message + '\n' + SDL_GetError()) {}
+    explicit SDLException(const std::string &message) : std::runtime_error(message + '\n' + SDL_GetError())
+    {
+    }
 };
 
-class HelloTriangleApplication {
+class HelloTriangleApplication
+{
    private:
     static constexpr const char     *window_title  = "Aether Game Engine";
     static constexpr uint16_t        window_width  = 800;
@@ -69,14 +73,18 @@ class HelloTriangleApplication {
         vk::KHRCreateRenderpass2ExtensionName,
     };
 
-    void initWindow() {
-        if (not SDL_Init(SDL_INIT_VIDEO)) throw SDLException("SDL_Init failed");
+    void initWindow()
+    {
+        if (not SDL_Init(SDL_INIT_VIDEO))
+            throw SDLException("SDL_Init failed");
 
         window = SDL_CreateWindow(window_title, window_width, window_height, window_flags);
-        if (window == nullptr) throw SDLException("SDL_CreateWindow failed");
+        if (window == nullptr)
+            throw SDLException("SDL_CreateWindow failed");
     }
 
-    void initVulkan() {
+    void initVulkan()
+    {
         createInstance();
         setupDebugMessenger();
         createSurface();
@@ -84,12 +92,16 @@ class HelloTriangleApplication {
         createLogicalDevice();
     }
 
-    void mainLoop() {
+    void mainLoop()
+    {
         SDL_ShowWindow(window);
 
-        while (not shouldBeClose) {
-            for (SDL_Event event; SDL_PollEvent(&event);) {
-                switch (event.type) {
+        while (not shouldBeClose)
+        {
+            for (SDL_Event event; SDL_PollEvent(&event);)
+            {
+                switch (event.type)
+                {
                     case SDL_EVENT_QUIT:
                         shouldBeClose = true;
                         break;
@@ -101,12 +113,14 @@ class HelloTriangleApplication {
         }
     }
 
-    void cleanup() {
+    void cleanup()
+    {
         SDL_DestroyWindow(window);
         SDL_Quit();
     }
 
-    void createInstance() {
+    void createInstance()
+    {
         constexpr vk::ApplicationInfo appInfo{.pApplicationName   = "Hello Triangle",
                                               .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
                                               .pEngineName        = "Aether Game Engine",
@@ -114,7 +128,8 @@ class HelloTriangleApplication {
 
         // Get the required layers
         std::vector<char const *> requiredLayers;
-        if (enableValidationLayers) {
+        if (enableValidationLayers)
+        {
             requiredLayers.assign(validationLayers.begin(), validationLayers.end());
         }
 
@@ -132,10 +147,12 @@ class HelloTriangleApplication {
 
         // Check if the required SDL extensions are supported by the Vulkan implementation.
         auto extensionProperties = context.enumerateInstanceExtensionProperties();
-        for (auto const &requiredExtension : requiredExtensions) {
+        for (auto const &requiredExtension : requiredExtensions)
+        {
             if (std::ranges::none_of(extensionProperties, [requiredExtension](auto const &extensionProperty) {
                     return strcmp(extensionProperty.extensionName, requiredExtension) == 0;
-                })) {
+                }))
+            {
                 throw std::runtime_error("Required extension not supported: " + std::string(requiredExtension));
             }
         }
@@ -149,8 +166,10 @@ class HelloTriangleApplication {
         instance = vk::raii::Instance(context, createInfo);
     }
 
-    void setupDebugMessenger() {
-        if (not enableValidationLayers) return;
+    void setupDebugMessenger()
+    {
+        if (not enableValidationLayers)
+            return;
 
         /*
          There are a lot more settings for the behavior of validation layers than
@@ -166,12 +185,14 @@ class HelloTriangleApplication {
         vk::DebugUtilsMessageTypeFlagsEXT     messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
                                                            vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
                                                            vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation);
-        vk::DebugUtilsMessengerCreateInfoEXT  debugUtilsMessengerCreateInfoEXT{
-             .messageSeverity = severityFlags, .messageType = messageTypeFlags, .pfnUserCallback = &debugCallback};
+        vk::DebugUtilsMessengerCreateInfoEXT  debugUtilsMessengerCreateInfoEXT{.messageSeverity = severityFlags,
+                                                                               .messageType     = messageTypeFlags,
+                                                                               .pfnUserCallback = &debugCallback};
         debugMessenger = instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
     }
 
-    void createSurface() {
+    void createSurface()
+    {
         VkSurfaceKHR _surface;
         if (not SDL_Vulkan_CreateSurface(window, *instance, nullptr, &_surface))
             throw std::runtime_error("failed to create window surface!");
@@ -211,7 +232,8 @@ class HelloTriangleApplication {
     // FIXME: It is not clear because the code from tutorial and repo are not the same
     // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html
     // https://github.com/KhronosGroup/Vulkan-Tutorial/blob/main/attachments/05_window_surface.cpp
-    void pickPhysicalDevice() {
+    void pickPhysicalDevice()
+    {
         std::vector<vk::raii::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
         const auto                            devIter = std::ranges::find_if(devices, [&](auto const &device) {
             auto queueFamilies = device.getQueueFamilyProperties();
@@ -224,16 +246,20 @@ class HelloTriangleApplication {
             isSuitable      = isSuitable && (qfpIter != queueFamilies.end());
             auto extensions = device.enumerateDeviceExtensionProperties();
             bool found      = true;
-            for (auto const &extension : deviceExtensions) {
-                auto extensionIter = std::ranges::find_if(
-                    extensions, [extension](auto const &ext) { return strcmp(ext.extensionName, extension) == 0; });
+            for (auto const &extension : deviceExtensions)
+            {
+                auto extensionIter = std::ranges::find_if(extensions, [extension](auto const &ext) {
+                    return strcmp(ext.extensionName, extension) == 0;
+                });
                 found = found && extensionIter != extensions.end();
             }
             isSuitable = isSuitable && found;
-            if (isSuitable) physicalDevice = device;
+            if (isSuitable)
+                physicalDevice = device;
             return isSuitable;
         });
-        if (devIter == devices.end()) throw std::runtime_error("failed to find a suitable GPU!");
+        if (devIter == devices.end())
+            throw std::runtime_error("failed to find a suitable GPU!");
     }
 
     // Version generated by devstrall-small-2:24b
@@ -302,7 +328,8 @@ class HelloTriangleApplication {
     //     physicalDevice = *devIter;
     // }
 
-    void createLogicalDevice() {
+    void createLogicalDevice()
+    {
         // find the index of the first queue family that supports graphics
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
 
@@ -319,29 +346,36 @@ class HelloTriangleApplication {
         auto presentIndex = physicalDevice.getSurfaceSupportKHR(graphicsIndex, *surface)
                                 ? graphicsIndex
                                 : static_cast<uint32_t>(queueFamilyProperties.size());
-        if (presentIndex == queueFamilyProperties.size()) {
+        if (presentIndex == queueFamilyProperties.size())
+        {
             // the graphicsIndex doesn't support present -> look for another family index that supports both
             // graphics and present
-            for (size_t i = 0; i < queueFamilyProperties.size(); i++) {
+            for (size_t i = 0; i < queueFamilyProperties.size(); i++)
+            {
                 if ((queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics) &&
-                    physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface)) {
+                    physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface))
+                {
                     graphicsIndex = static_cast<uint32_t>(i);
                     presentIndex  = graphicsIndex;
                     break;
                 }
             }
-            if (presentIndex == queueFamilyProperties.size()) {
+            if (presentIndex == queueFamilyProperties.size())
+            {
                 // there's nothing like a single family index that supports both graphics and present -> look for
                 // another family index that supports present
-                for (size_t i = 0; i < queueFamilyProperties.size(); i++) {
-                    if (physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface)) {
+                for (size_t i = 0; i < queueFamilyProperties.size(); i++)
+                {
+                    if (physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface))
+                    {
                         presentIndex = static_cast<uint32_t>(i);
                         break;
                     }
                 }
             }
         }
-        if ((graphicsIndex == queueFamilyProperties.size()) || (presentIndex == queueFamilyProperties.size())) {
+        if ((graphicsIndex == queueFamilyProperties.size()) || (presentIndex == queueFamilyProperties.size()))
+        {
             throw std::runtime_error("Could not find a queue for graphics or present -> terminating");
         }
 
@@ -355,10 +389,12 @@ class HelloTriangleApplication {
         features.pNext                                    = &vulkan13Features;
         // create a Device
         float                     queuePriority = 0.5f;
-        vk::DeviceQueueCreateInfo deviceQueueCreateInfo{
-            .queueFamilyIndex = graphicsIndex, .queueCount = 1, .pQueuePriorities = &queuePriority};
-        vk::DeviceCreateInfo deviceCreateInfo{
-            .pNext = &features, .queueCreateInfoCount = 1, .pQueueCreateInfos = &deviceQueueCreateInfo};
+        vk::DeviceQueueCreateInfo deviceQueueCreateInfo{.queueFamilyIndex = graphicsIndex,
+                                                        .queueCount       = 1,
+                                                        .pQueuePriorities = &queuePriority};
+        vk::DeviceCreateInfo      deviceCreateInfo{.pNext                = &features,
+                                                   .queueCreateInfoCount = 1,
+                                                   .pQueueCreateInfos    = &deviceQueueCreateInfo};
         deviceCreateInfo.enabledExtensionCount   = deviceExtensions.size();
         deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
@@ -367,7 +403,8 @@ class HelloTriangleApplication {
         presentQueue  = vk::raii::Queue(device, presentIndex, 0);
     }
 
-    std::vector<const char *> getRequiredExtensions() {
+    std::vector<const char *> getRequiredExtensions()
+    {
         uint32_t sdlExtensionCount = 0;
         // return in Windows
         // - sdlExtensions[0] = VK_KHR_surface
@@ -375,7 +412,8 @@ class HelloTriangleApplication {
         auto sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
 
         std::vector extensions(sdlExtensions, sdlExtensions + sdlExtensionCount);
-        if (enableValidationLayers) extensions.push_back(vk::EXTDebugUtilsExtensionName);
+        if (enableValidationLayers)
+            extensions.push_back(vk::EXTDebugUtilsExtensionName);
 
         return extensions;
     }
@@ -383,7 +421,8 @@ class HelloTriangleApplication {
     static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT      severity,
                                                           vk::DebugUtilsMessageTypeFlagsEXT             type,
                                                           const vk::DebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                                                          void *) {
+                                                          void *)
+    {
         if (severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eError ||
             severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)
             std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage
@@ -392,7 +431,8 @@ class HelloTriangleApplication {
         return vk::False;
     }
 
-    bool isDeviceSuitable(vk::raii::PhysicalDevice physicalDevice) {
+    bool isDeviceSuitable(vk::raii::PhysicalDevice physicalDevice)
+    {
         auto deviceProperties = physicalDevice.getProperties();
         auto deviceFeatures   = physicalDevice.getFeatures();
 
@@ -400,7 +440,8 @@ class HelloTriangleApplication {
     }
 
    public:
-    void run() {
+    void run()
+    {
         initWindow();
         initVulkan();
         mainLoop();
@@ -408,12 +449,15 @@ class HelloTriangleApplication {
     }
 };
 
-int main() {
+int main()
+{
     HelloTriangleApplication app;
 
-    try {
+    try
+    {
         app.run();
-    } catch (const std::exception &e) {
+    } catch (const std::exception &e)
+    {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
