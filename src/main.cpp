@@ -2,14 +2,15 @@
 // SPDX-License-Identifier: MIT
 
 // main.cpp
-#include <vulkan/vulkan_core.h>
-
+// Standard library headers
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
+#include <iostream>
+#include <map>
+#include <stdexcept>
 #include <utility>
 #include <vector>
-
-#include "vulkan/vulkan.hpp"
 
 #if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULE)
 #include <vulkan/vulkan_raii.hpp>
@@ -17,13 +18,9 @@
 import vulkan_hpp;
 #endif
 
+// SDL headers
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
-
-#include <cstdlib>
-#include <iostream>
-#include <map>
-#include <stdexcept>
 
 const std::vector<char const *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -67,6 +64,8 @@ class HelloTriangleApplication {
     vk::raii::Device         device         = nullptr;
 
     vk::raii::Queue graphicsQueue = nullptr;
+
+    vk::raii::SurfaceKHR surface = nullptr;
 
     std::vector<const char *> deviceExtensions = {
         vk::KHRSwapchainExtensionName,
@@ -341,7 +340,7 @@ class HelloTriangleApplication {
         // return in Windows
         // - sdlExtensions[0] = VK_KHR_surface
         // - sdlExtensions[2] = VK_KHR_win32_surface
-        auto     sdlExtensions     = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
+        auto sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
 
         std::vector extensions(sdlExtensions, sdlExtensions + sdlExtensionCount);
         if (enableValidationLayers) extensions.push_back(vk::EXTDebugUtilsExtensionName);
