@@ -338,6 +338,9 @@ class HelloTriangleApplication {
 
     std::vector<const char *> getRequiredExtensions() {
         uint32_t sdlExtensionCount = 0;
+        // return in Windows
+        // - sdlExtensions[0] = VK_KHR_surface
+        // - sdlExtensions[2] = VK_KHR_win32_surface
         auto     sdlExtensions     = SDL_Vulkan_GetInstanceExtensions(&sdlExtensionCount);
 
         std::vector extensions(sdlExtensions, sdlExtensions + sdlExtensionCount);
