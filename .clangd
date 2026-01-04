@@ -31,5 +31,5 @@ InlayHints:
 Completion:
   AllScopes: Yes
   ArgumentLists: FullPlaceholders
-  HeaderInsertion: IWYU
+  HeaderInsertion: Never
   CodePatterns: All
