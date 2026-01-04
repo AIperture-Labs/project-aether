@@ -6,7 +6,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <map>
 #include <stdexcept>
 #include <vector>
 
@@ -180,34 +179,34 @@ class HelloTriangleApplication {
     }
 
     // This is an example how I could design my device selection.
-    void examplePickPhysicalDevice() {
-        auto devices = instance.enumeratePhysicalDevices();
-        if (devices.empty()) throw std::runtime_error("failed to find GPUs with Vulkan support!");
+    // void examplePickPhysicalDevice() {
+    //     auto devices = instance.enumeratePhysicalDevices();
+    //     if (devices.empty()) throw std::runtime_error("failed to find GPUs with Vulkan support!");
 
-        std::multimap<int, vk::raii::PhysicalDevice> candidates;
+    //     std::multimap<int, vk::raii::PhysicalDevice> candidates;
 
-        for (const auto &device : devices) {
-            auto     deviceProperties = device.getProperties();
-            auto     deviceFeatures   = device.getFeatures();
-            uint32_t score            = 0;
+    //     for (const auto &device : devices) {
+    //         auto     deviceProperties = device.getProperties();
+    //         auto     deviceFeatures   = device.getFeatures();
+    //         uint32_t score            = 0;
 
-            // Discrete GPUs have a significante performance advantage
-            if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) score += 1000;
+    //         // Discrete GPUs have a significante performance advantage
+    //         if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) score += 1000;
 
-            // Maximum possible size of textures affects graphics quality
-            score += deviceProperties.limits.maxImageDimension2D;
+    //         // Maximum possible size of textures affects graphics quality
+    //         score += deviceProperties.limits.maxImageDimension2D;
 
-            // Application can't function without geometry shaders
-            if (not deviceFeatures.geometryShader) continue;
-            candidates.insert(std::make_pair(score, device));
-        }
+    //         // Application can't function without geometry shaders
+    //         if (not deviceFeatures.geometryShader) continue;
+    //         candidates.insert(std::make_pair(score, device));
+    //     }
 
-        // Check if the best candidate is suitable at all
-        if (candidates.rbegin()->first > 0)
-            physicalDevice = candidates.rbegin()->second;
-        else
-            throw std::runtime_error("failed to find a suitable GPU!");
-    }
+    //     // Check if the best candidate is suitable at all
+    //     if (candidates.rbegin()->first > 0)
+    //         physicalDevice = candidates.rbegin()->second;
+    //     else
+    //         throw std::runtime_error("failed to find a suitable GPU!");
+    // }
 
     // FIXME: It is not clear because the code from tutorial and repo are not the same
     // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html
