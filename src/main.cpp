@@ -77,6 +77,36 @@ class HelloTriangleApplication {
         if (window == nullptr) throw SDLException("SDL_CreateWindow failed");
     }
 
+    void initVulkan() {
+        createInstance();
+        setupDebugMessenger();
+        createSurface();
+        pickPhysicalDevice();
+        createLogicalDevice();
+    }
+
+    void mainLoop() {
+        SDL_ShowWindow(window);
+
+        while (not shouldBeClose) {
+            for (SDL_Event event; SDL_PollEvent(&event);) {
+                switch (event.type) {
+                    case SDL_EVENT_QUIT:
+                        shouldBeClose = true;
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+    }
+
+    void cleanup() {
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+    }
+
     void createInstance() {
         constexpr vk::ApplicationInfo appInfo{.pApplicationName   = "Hello Triangle",
                                               .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
@@ -118,13 +148,6 @@ class HelloTriangleApplication {
                                           .ppEnabledExtensionNames = requiredExtensions.data()};
 
         instance = vk::raii::Instance(context, createInfo);
-    }
-
-    void initVulkan() {
-        createInstance();
-        setupDebugMessenger();
-        pickPhysicalDevice();
-        createLogicalDevice();
     }
 
     void setupDebugMessenger() {
@@ -307,28 +330,7 @@ class HelloTriangleApplication {
 
         device        = vk::raii::Device(physicalDevice, deviceCreateInfo);
         graphicsQueue = vk::raii::Queue(device, graphicsIndex, 0);
-    }
-
-    void mainLoop() {
-        SDL_ShowWindow(window);
-
-        while (not shouldBeClose) {
-            for (SDL_Event event; SDL_PollEvent(&event);) {
-                switch (event.type) {
-                    case SDL_EVENT_QUIT:
-                        shouldBeClose = true;
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-        }
-    }
-
-    void cleanup() {
-        SDL_DestroyWindow(window);
-        SDL_Quit();
+        presentQueue  = vk::raii::Queue(device, presentIndex, 0);
     }
 
     std::vector<const char *> getRequiredExtensions() {
