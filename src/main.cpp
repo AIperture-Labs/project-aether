@@ -57,13 +57,11 @@ class HelloTriangleApplication {
     vk::raii::Context                context;
     vk::raii::Instance               instance       = nullptr;
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
-
-    vk::raii::PhysicalDevice physicalDevice = nullptr;
-    vk::raii::Device         device         = nullptr;
-
-    vk::raii::Queue graphicsQueue = nullptr;
-
-    vk::raii::SurfaceKHR surface = nullptr;
+    vk::raii::PhysicalDevice         physicalDevice = nullptr;
+    vk::raii::Device                 device         = nullptr;
+    vk::raii::Queue                  graphicsQueue  = nullptr;
+    vk::raii::Queue                  presentQueue   = nullptr;
+    vk::raii::SurfaceKHR             surface        = nullptr;
 
     std::vector<const char *> deviceExtensions = {
         vk::KHRSwapchainExtensionName,
