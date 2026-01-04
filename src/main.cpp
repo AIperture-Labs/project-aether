@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: MIT
 
 // main.cpp
-// Standard library headers
 #include <algorithm>
-#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
 #if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULE)
