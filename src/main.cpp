@@ -54,7 +54,7 @@ class HelloTriangleApplication
     static constexpr uint16_t        window_height = 600;
     bool                             shouldBeClose = false;
     static constexpr SDL_WindowFlags window_flags =
-        SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+        SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
     SDL_Window                      *window = nullptr;
     vk::raii::Context                context;
