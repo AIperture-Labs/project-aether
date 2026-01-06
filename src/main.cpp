@@ -67,9 +67,10 @@ class HelloTriangleApplication
     vk::raii::Queue                  queue          = nullptr;
     vk::raii::SurfaceKHR             surface        = nullptr;
     vk::raii::SwapchainKHR           swapChain      = nullptr;
-    std::vector<vk::Image>           SwapChainImages;
+    std::vector<vk::Image>           swapChainImages;
     vk::SurfaceFormatKHR             swapChainSurfaceFormat;
     vk::Extent2D                     swapChainExtent;
+    std::vector<vk::ImageView>       swapChainImageViews;
 
     std::vector<const char *> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName,
@@ -96,6 +97,7 @@ class HelloTriangleApplication
         pickPhysicalDevice();
         createLogicalDevice();
         createSwapChain();
+        createImagesViews();
     }
 
     void mainLoop()
@@ -355,7 +357,27 @@ class HelloTriangleApplication
             .oldSwapchain     = nullptr};
 
         swapChain       = vk::raii::SwapchainKHR(device, swapChainCreateInfo);
-        SwapChainImages = swapChain.getImages();
+        swapChainImages = swapChain.getImages();
+    }
+
+    void createImagesViews()
+    {
+        // TODO: assert(swapChainImageViews.empty());
+        swapChainImageViews.clear();
+
+        vk::ImageViewCreateInfo imageViewCreateInfo{.viewType         = vk::ImageViewType::e2D,
+                                                    .format           = swapChainSurfaceFormat.format,
+                                                    .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}};
+
+        for (auto &image : swapChainImages)
+        {
+            imageViewCreateInfo.image = image;
+            // XXX: swapChainImageViews.emplace_back(device, imageViewCreateInfo);
+            // Object construction make by emplace raise an error.
+            swapChainImageViews.push_back(vk::raii::ImageView(device, imageViewCreateInfo));
+        }
+    }
+
     }
 
     static uint32_t calculateMinImageCount(const vk::SurfaceCapabilitiesKHR &surfaceCapabilities)
