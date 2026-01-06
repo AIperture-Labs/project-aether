@@ -3,9 +3,11 @@
 
 // main.cpp
 #include <algorithm>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <vector>
 
@@ -61,10 +63,13 @@ class HelloTriangleApplication
     vk::raii::Instance               instance       = nullptr;
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
     vk::raii::PhysicalDevice         physicalDevice = nullptr;
-    vk::raii::Device                 device         = nullptr;
-    vk::raii::Queue                  graphicsQueue  = nullptr; /* logicalDevice */
-    vk::raii::Queue                  presentQueue   = nullptr;
+    vk::raii::Device                 device         = nullptr; /* logicalDevice */
+    vk::raii::Queue                  queue          = nullptr;
     vk::raii::SurfaceKHR             surface        = nullptr;
+    vk::raii::SwapchainKHR           swapChain      = nullptr;
+    std::vector<vk::Image>           SwapChainImages;
+    vk::SurfaceFormatKHR             swapChainSurfaceFormat;
+    vk::Extent2D                     swapChainExtent;
 
     std::vector<const char *> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName,
@@ -90,6 +95,7 @@ class HelloTriangleApplication
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
+        createSwapChain();
     }
 
     void mainLoop()
@@ -271,10 +277,12 @@ class HelloTriangleApplication
         if (devIter == devices.end())
         {
             throw std::runtime_error("failed to find a suitable GPU!");
-    }
+        }
     }
 
     // XXX: if have graphicQueue and presentationQueue separate check👇
+    // Example to use two queues if you want to have post-treatment of rendered images.
+    // See:
     // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/01_Presentation/00_Window_surface.html#_creating_the_presentation_queue
     void createLogicalDevice()
     {
@@ -285,14 +293,14 @@ class HelloTriangleApplication
         uint32_t queueIndex = ~0u;
 
         for (uint32_t qfpIndex = 0; qfpIndex < queueFamilyProperties.size(); qfpIndex++)
-            {
+        {
             if ((queueFamilyProperties[qfpIndex].queueFlags & vk::QueueFlagBits::eGraphics) &&
                 physicalDevice.getSurfaceSupportKHR(qfpIndex, *surface))
             {
                 queueIndex = qfpIndex;
-                        break;
-                    }
-                }
+                break;
+            }
+        }
         if (queueIndex == ~0u)
         {
             throw std::runtime_error("Could not find a queue for graphics and present -> terminating");
@@ -324,8 +332,86 @@ class HelloTriangleApplication
         queue  = vk::raii::Queue(device, queueIndex, 0);
     }
 
+    void createSwapChain()
+    {
+        auto surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
+        swapChainSurfaceFormat   = chooseSwapSurfaceFormat(physicalDevice.getSurfaceFormatsKHR(surface));
+        swapChainExtent          = chooseSwapExtent(surfaceCapabilities);
+
+        vk::SwapchainCreateInfoKHR swapChainCreateInfo{
+            .flags            = vk::SwapchainCreateFlagsKHR(),
+            .surface          = surface,
+            .minImageCount    = calculateMinImageCount(surfaceCapabilities),
+            .imageFormat      = swapChainSurfaceFormat.format,
+            .imageColorSpace  = swapChainSurfaceFormat.colorSpace,
+            .imageExtent      = swapChainExtent,
+            .imageArrayLayers = 1,  // 2 if VR
+            .imageUsage       = vk::ImageUsageFlagBits::eColorAttachment,
+            .imageSharingMode = vk::SharingMode::eExclusive,
+            .preTransform     = surfaceCapabilities.currentTransform,
+            .compositeAlpha   = vk::CompositeAlphaFlagBitsKHR::eOpaque,
+            .presentMode      = chooseSwapPresentMode(physicalDevice.getSurfacePresentModesKHR(surface)),
+            .clipped          = true,
+            .oldSwapchain     = nullptr};
+
+        swapChain       = vk::raii::SwapchainKHR(device, swapChainCreateInfo);
+        SwapChainImages = swapChain.getImages();
     }
 
+    static uint32_t calculateMinImageCount(const vk::SurfaceCapabilitiesKHR &surfaceCapabilities)
+    {
+        auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
+        minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount)
+                            ? surfaceCapabilities.maxImageCount
+                            : minImageCount;
+        return minImageCount;
+    }
+
+    vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> &availableFormats)
+    {
+        // TODO: switch to ranges any_of ???
+        for (const auto &availableFormat : availableFormats)
+        {
+            if (availableFormat.format == vk::Format::eB8G8R8A8Srgb &&
+                availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
+            {
+                return availableFormat;
+            }
+        }
+        return availableFormats[0];
+    }
+
+    vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR> &availablePresentModes)
+    {
+        // TODO: switch to ranges any_of ???
+        for (const auto &availablePresentMode : availablePresentModes)
+        {
+            if (availablePresentMode == vk::PresentModeKHR::eMailbox)
+            {
+                return availablePresentMode;
+            }
+        }
+        return vk::PresentModeKHR::eFifo;
+    }
+
+    vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR &capabilities)
+    {
+        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+        {
+            return capabilities.currentExtent;
+        }
+
+        SDL_Surface *sdl_surface = SDL_GetWindowSurface(window);
+        if (sdl_surface == nullptr)
+        {
+            throw std::runtime_error("Failed to get SDL window surface!");
+        }
+
+        return {
+            std::clamp<uint32_t>(sdl_surface->w, capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
+            std::clamp<uint32_t>(sdl_surface->h,
+                                 capabilities.minImageExtent.height,
+                                 capabilities.maxImageExtent.height)};
     }
 
     std::vector<const char *> getRequiredExtensions()
