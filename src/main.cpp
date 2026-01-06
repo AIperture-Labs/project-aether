@@ -62,7 +62,7 @@ class HelloTriangleApplication
     vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
     vk::raii::PhysicalDevice         physicalDevice = nullptr;
     vk::raii::Device                 device         = nullptr;
-    vk::raii::Queue                  graphicsQueue  = nullptr;
+    vk::raii::Queue                  graphicsQueue  = nullptr; /* logicalDevice */
     vk::raii::Queue                  presentQueue   = nullptr;
     vk::raii::SurfaceKHR             surface        = nullptr;
 
