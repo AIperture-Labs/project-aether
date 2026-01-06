@@ -233,21 +233,23 @@ class HelloTriangleApplication
     //         throw std::runtime_error("failed to find a suitable GPU!");
     // }
 
-    // FIXME: It is not clear because the code from tutorial and repo are not the same
-    // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/00_Setup/03_Physical_devices_and_queue_families.html
-    // https://github.com/KhronosGroup/Vulkan-Tutorial/blob/main/attachments/05_window_surface.cpp
     void pickPhysicalDevice()
     {
         std::vector<vk::raii::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
-        const auto                            devIter = std::ranges::find_if(devices, [&](auto const &device) {
-            auto queueFamilies = device.getQueueFamilyProperties();
-            // XXX: Check if Vulkan 1.3 API can be upgraded to 1.4
-            bool       isSuitable = device.getProperties().apiVersion >= VK_API_VERSION_1_3;
-            const auto qfpIter = std::ranges::find_if(queueFamilies, [](vk::QueueFamilyProperties const &qfp) {
+        if (devices.empty())
+        {
+            throw std::runtime_error("failed to find GPUs with Vulkan support!");
+        }
+
+        const auto devIter = std::ranges::find_if(devices, [&](auto const &device) {
+            auto       queueFamilies = device.getQueueFamilyProperties();
+            bool       isSuitable    = device.getProperties().apiVersion >= VK_API_VERSION_1_4;
+            const auto qfpIter       = std::ranges::find_if(queueFamilies, [](vk::QueueFamilyProperties const &qfp) {
                 return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
                 ;
             });
-            isSuitable      = isSuitable && (qfpIter != queueFamilies.end());
+            isSuitable               = isSuitable && (qfpIter != queueFamilies.end());
+
             auto extensions = device.enumerateDeviceExtensionProperties();
             bool found      = true;
             for (auto const &extension : deviceExtensions)
@@ -255,14 +257,19 @@ class HelloTriangleApplication
                 auto extensionIter = std::ranges::find_if(extensions, [extension](auto const &ext) {
                     return strcmp(ext.extensionName, extension) == 0;
                 });
-                found = found && extensionIter != extensions.end();
+                found              = found && extensionIter != extensions.end();
             }
+
             isSuitable = isSuitable && found;
             if (isSuitable)
+            {
                 physicalDevice = device;
+            }
             return isSuitable;
         });
+
         if (devIter == devices.end())
+        {
             throw std::runtime_error("failed to find a suitable GPU!");
     }
     }
