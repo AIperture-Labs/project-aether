@@ -203,8 +203,8 @@ class HelloTriangleApplication
         surface = vk::raii::SurfaceKHR(instance, _surface);
     }
 
-    // This is an example how I could design my device selection.
-    // void examplePickPhysicalDevice() {
+    // This is an example how I could design my device selection by the score.
+    // void scorePickPhysicalDevice() {
     //     auto devices = instance.enumeratePhysicalDevices();
     //     if (devices.empty()) throw std::runtime_error("failed to find GPUs with Vulkan support!");
 
