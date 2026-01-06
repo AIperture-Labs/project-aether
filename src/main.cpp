@@ -169,7 +169,9 @@ class HelloTriangleApplication
     void setupDebugMessenger()
     {
         if (not enableValidationLayers)
+        {
             return;
+        }
 
         /*
          There are a lot more settings for the behavior of validation layers than
@@ -195,7 +197,9 @@ class HelloTriangleApplication
     {
         VkSurfaceKHR _surface;
         if (not SDL_Vulkan_CreateSurface(window, *instance, nullptr, &_surface))
+        {
             throw std::runtime_error("failed to create window surface!");
+        }
         surface = vk::raii::SurfaceKHR(instance, _surface);
     }
 
