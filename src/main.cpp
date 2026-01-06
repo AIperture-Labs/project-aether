@@ -292,6 +292,7 @@ class HelloTriangleApplication
         auto presentIndex = physicalDevice.getSurfaceSupportKHR(graphicsIndex, *surface)
                                 ? graphicsIndex
                                 : static_cast<uint32_t>(queueFamilyProperties.size());
+
         if (presentIndex == queueFamilyProperties.size())
         {
             // the graphicsIndex doesn't support present -> look for another family index that supports both
@@ -306,6 +307,7 @@ class HelloTriangleApplication
                     break;
                 }
             }
+
             if (presentIndex == queueFamilyProperties.size())
             {
                 // there's nothing like a single family index that supports both graphics and present -> look for
@@ -320,33 +322,38 @@ class HelloTriangleApplication
                 }
             }
         }
+
         if ((graphicsIndex == queueFamilyProperties.size()) || (presentIndex == queueFamilyProperties.size()))
         {
             throw std::runtime_error("Could not find a queue for graphics or present -> terminating");
         }
 
         // query for Vulkan 1.3 features
-        auto                                              features = physicalDevice.getFeatures2();
-        vk::PhysicalDeviceVulkan13Features                vulkan13Features;
-        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT extendedDynamicStateFeatures;
-        vulkan13Features.dynamicRendering                 = vk::True;
-        extendedDynamicStateFeatures.extendedDynamicState = vk::True;
-        vulkan13Features.pNext                            = &extendedDynamicStateFeatures;
-        features.pNext                                    = &vulkan13Features;
-        // create a Device
+        vk::StructureChain<vk::PhysicalDeviceFeatures2,
+                           vk::PhysicalDeviceVulkan13Features,
+                           vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
+            featureChain = {
+                {},                             // vk::PhysicalDeviceFeatures2
+                {.dynamicRendering = true},     // vk::PhysicalDeviceVulkan13Features
+                {.extendedDynamicState = true}  // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+            };
+
+        // create a (logical) Device
         float                     queuePriority = 0.5f;
         vk::DeviceQueueCreateInfo deviceQueueCreateInfo{.queueFamilyIndex = graphicsIndex,
                                                         .queueCount       = 1,
                                                         .pQueuePriorities = &queuePriority};
-        vk::DeviceCreateInfo      deviceCreateInfo{.pNext                = &features,
-                                                   .queueCreateInfoCount = 1,
-                                                   .pQueueCreateInfos    = &deviceQueueCreateInfo};
-        deviceCreateInfo.enabledExtensionCount   = deviceExtensions.size();
-        deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+        vk::DeviceCreateInfo      deviceCreateInfo{
+                 .pNext                   = &featureChain.get<vk::PhysicalDeviceFeatures2>(),
+                 .queueCreateInfoCount    = 1,
+                 .pQueueCreateInfos       = &deviceQueueCreateInfo,
+                 .enabledExtensionCount   = static_cast<uint32_t>(requiredDeviceExtension.size()),
+                 .ppEnabledExtensionNames = requiredDeviceExtension.data()};
 
         device        = vk::raii::Device(physicalDevice, deviceCreateInfo);
         graphicsQueue = vk::raii::Queue(device, graphicsIndex, 0);
-        presentQueue  = vk::raii::Queue(device, presentIndex, 0);
+    }
+
     }
 
     std::vector<const char *> getRequiredExtensions()
