@@ -66,7 +66,7 @@ class HelloTriangleApplication
     vk::raii::Queue                  presentQueue   = nullptr;
     vk::raii::SurfaceKHR             surface        = nullptr;
 
-    std::vector<const char *> deviceExtensions = {
+    std::vector<const char *> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName,
         vk::KHRSpirv14ExtensionName,
         vk::KHRSynchronization2ExtensionName,
@@ -243,7 +243,7 @@ class HelloTriangleApplication
 
         const auto devIter = std::ranges::find_if(devices, [&](auto const &device) {
             auto       queueFamilies = device.getQueueFamilyProperties();
-            bool       isSuitable    = device.getProperties().apiVersion >= VK_API_VERSION_1_4;
+            bool       isSuitable    = device.getProperties().apiVersion >= VK_API_VERSION_1_3;  // XXX: Update to 1.4 ?
             const auto qfpIter       = std::ranges::find_if(queueFamilies, [](vk::QueueFamilyProperties const &qfp) {
                 return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
                 ;
@@ -252,7 +252,7 @@ class HelloTriangleApplication
 
             auto extensions = device.enumerateDeviceExtensionProperties();
             bool found      = true;
-            for (auto const &extension : deviceExtensions)
+            for (auto const &extension : requiredDeviceExtension)
             {
                 auto extensionIter = std::ranges::find_if(extensions, [extension](auto const &ext) {
                     return strcmp(ext.extensionName, extension) == 0;
