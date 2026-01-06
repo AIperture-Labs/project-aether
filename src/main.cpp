@@ -274,58 +274,28 @@ class HelloTriangleApplication
     }
     }
 
+    // XXX: if have graphicQueue and presentationQueue separate check👇
+    // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/01_Presentation/00_Window_surface.html#_creating_the_presentation_queue
     void createLogicalDevice()
     {
         // find the index of the first queue family that supports graphics
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
 
-        // get the first index into queueFamilyProperties which supports graphics
-        auto graphicsQueueFamilyProperty = std::ranges::find_if(queueFamilyProperties, [](auto const &qfp) {
-            return (qfp.queueFlags & vk::QueueFlagBits::eGraphics) != static_cast<vk::QueueFlags>(0);
-        });
+        // get the first index into queueFamilyProperties which supports both graphics and present.
+        uint32_t queueIndex = ~0u;
 
-        auto graphicsIndex =
-            static_cast<uint32_t>(std::distance(queueFamilyProperties.begin(), graphicsQueueFamilyProperty));
-
-        // determine a queueFamilyIndex that supports present
-        // first check if the graphicsIndex is good enough
-        auto presentIndex = physicalDevice.getSurfaceSupportKHR(graphicsIndex, *surface)
-                                ? graphicsIndex
-                                : static_cast<uint32_t>(queueFamilyProperties.size());
-
-        if (presentIndex == queueFamilyProperties.size())
-        {
-            // the graphicsIndex doesn't support present -> look for another family index that supports both
-            // graphics and present
-            for (size_t i = 0; i < queueFamilyProperties.size(); i++)
+        for (uint32_t qfpIndex = 0; qfpIndex < queueFamilyProperties.size(); qfpIndex++)
             {
-                if ((queueFamilyProperties[i].queueFlags & vk::QueueFlagBits::eGraphics) &&
-                    physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface))
-                {
-                    graphicsIndex = static_cast<uint32_t>(i);
-                    presentIndex  = graphicsIndex;
-                    break;
-                }
-            }
-
-            if (presentIndex == queueFamilyProperties.size())
+            if ((queueFamilyProperties[qfpIndex].queueFlags & vk::QueueFlagBits::eGraphics) &&
+                physicalDevice.getSurfaceSupportKHR(qfpIndex, *surface))
             {
-                // there's nothing like a single family index that supports both graphics and present -> look for
-                // another family index that supports present
-                for (size_t i = 0; i < queueFamilyProperties.size(); i++)
-                {
-                    if (physicalDevice.getSurfaceSupportKHR(static_cast<uint32_t>(i), *surface))
-                    {
-                        presentIndex = static_cast<uint32_t>(i);
+                queueIndex = qfpIndex;
                         break;
                     }
                 }
-            }
-        }
-
-        if ((graphicsIndex == queueFamilyProperties.size()) || (presentIndex == queueFamilyProperties.size()))
+        if (queueIndex == ~0u)
         {
-            throw std::runtime_error("Could not find a queue for graphics or present -> terminating");
+            throw std::runtime_error("Could not find a queue for graphics and present -> terminating");
         }
 
         // query for Vulkan 1.3 features
@@ -340,7 +310,7 @@ class HelloTriangleApplication
 
         // create a (logical) Device
         float                     queuePriority = 0.5f;
-        vk::DeviceQueueCreateInfo deviceQueueCreateInfo{.queueFamilyIndex = graphicsIndex,
+        vk::DeviceQueueCreateInfo deviceQueueCreateInfo{.queueFamilyIndex = queueIndex,
                                                         .queueCount       = 1,
                                                         .pQueuePriorities = &queuePriority};
         vk::DeviceCreateInfo      deviceCreateInfo{
@@ -350,8 +320,10 @@ class HelloTriangleApplication
                  .enabledExtensionCount   = static_cast<uint32_t>(requiredDeviceExtension.size()),
                  .ppEnabledExtensionNames = requiredDeviceExtension.data()};
 
-        device        = vk::raii::Device(physicalDevice, deviceCreateInfo);
-        graphicsQueue = vk::raii::Queue(device, graphicsIndex, 0);
+        device = vk::raii::Device(physicalDevice, deviceCreateInfo);
+        queue  = vk::raii::Queue(device, queueIndex, 0);
+    }
+
     }
 
     }
