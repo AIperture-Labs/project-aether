@@ -21,7 +21,7 @@
             "program": "${command:cmake.launchTargetPath}",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${command:cmake.getLaunchTargetDirectory}",
             "environment": [
                 {
                     "name": "PATH",
@@ -46,7 +46,7 @@
             "program": "${command:cmake.launchTargetPath}",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${command:cmake.getLaunchTargetDirectory}",
             "environment": [
                 {
                     "name": "PATH",
@@ -79,7 +79,7 @@
             "program": "${command:cmake.launchTargetPath}",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${command:cmake.getLaunchTargetDirectory}",
             "environment": [
                 {
                     "name": "PATH",
@@ -106,7 +106,7 @@
             "name": "(ctest) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${command:cmake.getLaunchTargetDirectory}",
             "presentation": {
                 "hidden": true,
             },
@@ -141,7 +141,7 @@
                 "${command:cmake.launchTargetPath}"
             ],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${command:cmake.getLaunchTargetDirectory}",
             "environment": [
                 {
                     "name": "VK_LAYER_PATH",

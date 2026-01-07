@@ -15,3 +15,8 @@ target_link_libraries(Main Vulkan::cppm SDL3::SDL3)
 if(ENABLE_CPP20_MODULE)
     target_compile_definitions(Main PRIVATE USE_CPP20_MODULES=1)
 endif()
+add_slang_shader_target(
+    MainShaders
+    SOURCES shader_base.slang
+)
+add_dependencies(Main MainShaders)

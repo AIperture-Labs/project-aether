@@ -23,7 +23,7 @@ function(enable_sanitizers TARGET)
         return()
     endif()
 
-    if (WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         # Runtime compatible ASan
         set_property(TARGET ${TARGET} PROPERTY
             MSVC_RUNTIME_LIBRARY "MultiThreaded"
@@ -186,28 +186,57 @@ function(add_shaders_target TARGET)
     add_custom_target(${TARGET} DEPENDS ${SHADERS_DIR}/frag.spv ${SHADERS_DIR}/vert.spv)
 endfunction()
 
+# function(add_slang_shader_target TARGET)
+#     cmake_parse_arguments("SHADER" "" "CHAPTER_NAME" "SOURCES" ${ARGN})
+#     set(SHADERS_DIR ${SHADER_CHAPTER_NAME}/shaders)
+#     file(GLOB HAS_COMPUTE ${CHAPTER_SHADER}.comp)
+#     set(ENTRY_POINTS -entry vertMain -entry fragMain)
+#     if(HAS_COMPUTE)
+#         list(APPEND ENTRY_POINTS -entry compMain)
+#     endif()
+#     add_custom_command(
+#         OUTPUT ${SHADERS_DIR}
+#         COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_DIR}
+#     )
+#     add_custom_command(
+#         OUTPUT ${SHADERS_DIR}/slang.spv
+#         COMMAND ${SLANGC_EXECUTABLE} ${SHADER_SOURCES} -target spirv -profile spirv_1_4+spvRayQueryKHR -emit-spirv-directly -fvk-use-entrypoint-name ${ENTRY_POINTS} -o slang.spv
+#         WORKING_DIRECTORY ${SHADERS_DIR}
+#         DEPENDS ${SHADERS_DIR} ${SHADER_SOURCES}
+#         COMMENT "Compiling Slang Shaders"
+#         VERBATIM
+#     )
+#     add_custom_target(${TARGET} DEPENDS ${SHADERS_DIR}/slang.spv)
+# endfunction()
+
 function(add_slang_shader_target TARGET)
-    cmake_parse_arguments("SHADER" "" "CHAPTER_NAME" "SOURCES" ${ARGN})
-    set(SHADERS_DIR ${SHADER_CHAPTER_NAME}/shaders)
-    file(GLOB HAS_COMPUTE ${CHAPTER_SHADER}.comp)
-    set(ENTRY_POINTS -entry vertMain -entry fragMain)
-    if(HAS_COMPUTE)
-        list(APPEND ENTRY_POINTS -entry compMain)
-    endif()
-    add_custom_command(
-        OUTPUT ${SHADERS_DIR}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_DIR}
+    cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
+    
+    # Use the current source directory relative to the project source
+    file(RELATIVE_PATH RELATIVE_SOURCE_DIR 
+        ${CMAKE_SOURCE_DIR} 
+        ${CMAKE_CURRENT_SOURCE_DIR}
     )
+    
+    # Create output directory matching source structure
+    set(SHADERS_BINARY_DIR ${CMAKE_BINARY_DIR}/${RELATIVE_SOURCE_DIR})
+    
+    set(ENTRY_POINTS -entry vertMain -entry fragMain)
+    set(PROFILES -profile spirv_1_4)
+    
     add_custom_command(
-        OUTPUT ${SHADERS_DIR}/slang.spv
-        COMMAND ${SLANGC_EXECUTABLE} ${SHADER_SOURCES} -target spirv -profile spirv_1_4+spvRayQueryKHR -emit-spirv-directly -fvk-use-entrypoint-name ${ENTRY_POINTS} -o slang.spv
-        WORKING_DIRECTORY ${SHADERS_DIR}
-        DEPENDS ${SHADERS_DIR} ${SHADER_SOURCES}
-        COMMENT "Compiling Slang Shaders"
+        OUTPUT ${SHADERS_BINARY_DIR}/slang.spv
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_BINARY_DIR}
+        COMMAND ${SLANGC_EXECUTABLE} ${SHADER_SOURCES} -target spirv ${PROFILES} -emit-spirv-directly -fvk-use-entrypoint-name ${ENTRY_POINTS} -o ${SHADERS_BINARY_DIR}/slang.spv
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS ${SHADER_SOURCES}
+        COMMENT "Compiling Slang Shaders to ${RELATIVE_SOURCE_DIR}"
         VERBATIM
     )
-    add_custom_target(${TARGET} DEPENDS ${SHADERS_DIR}/slang.spv)
+    
+    add_custom_target(${TARGET} DEPENDS ${SHADERS_BINARY_DIR}/slang.spv)
 endfunction()
+
 
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
     set(CCDB_SRC "${CMAKE_BINARY_DIR}/compile_commands.json")
@@ -215,8 +244,8 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
 
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E create_symlink
-                "${CCDB_SRC}"
-                "${CCDB_DST}"
+        "${CCDB_SRC}"
+        "${CCDB_DST}"
         RESULT_VARIABLE SYMLINK_RESULT
         ERROR_QUIET
     )
@@ -229,8 +258,8 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
 
         execute_process(
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${CCDB_SRC}"
-                    "${CCDB_DST}"
+            "${CCDB_SRC}"
+            "${CCDB_DST}"
         )
     endif()
 endif()
