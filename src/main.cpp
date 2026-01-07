@@ -73,7 +73,8 @@ class HelloTriangleApplication
     vk::Extent2D                     swapChainExtent;
     std::vector<vk::ImageView>       swapChainImageViews;
 
-    vk::PipelineLayout pipelineLayout = nullptr;
+    vk::PipelineLayout pipelineLayout   = nullptr;
+    vk::Pipeline       graphicsPipeline = nullptr;
 
     std::vector<const char *> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName,
@@ -424,7 +425,6 @@ class HelloTriangleApplication
                                                             .attachmentCount = 1,
                                                             .pAttachments    = &colorBlendAttachement};
 
-        // XXX: Dynamic State where this structure is used ?
         std::vector dynamicStates = {
             vk::DynamicState::eViewport,
             vk::DynamicState::eScissor,
@@ -435,6 +435,23 @@ class HelloTriangleApplication
 
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo{.setLayoutCount = 0, .pushConstantRangeCount = 0};
         pipelineLayout = vk::raii::PipelineLayout(device, pipelineLayoutInfo);
+
+        vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfo> pipelineCreateInfoChain = {
+            {.stageCount          = 2,
+             .pStages             = shaderStages,
+             .pVertexInputState   = &vertexInputInfo,
+             .pInputAssemblyState = &inputAssembly,
+             .pViewportState      = &viewportState,
+             .pRasterizationState = &rasterizer,
+             .pMultisampleState   = &multisampling,
+             .pColorBlendState    = &colorBlending,
+             .pDynamicState       = &dynamicState,
+             .layout              = pipelineLayout,
+             .renderPass          = nullptr},
+            {.colorAttachmentCount = 1, .pColorAttachmentFormats = &swapChainSurfaceFormat.format}};
+
+        graphicsPipeline =
+            vk::raii::Pipeline(device, nullptr, pipelineCreateInfoChain.get<vk::GraphicsPipelineCreateInfo>());
     }
 
     [[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const
