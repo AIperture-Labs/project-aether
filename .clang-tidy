@@ -7,26 +7,11 @@
 
 ---
 Checks: >
-  *,
-  -llvm-header-guard,
-  modernize-*,
-  performance-*,
-  readability-*,
-  bugprone-*,
-  cppcoreguidelines-*,
-  misc-*
-WarningsAsErrors: '*'
-HeaderFilterRegex: 'src/.*|include/.*'
-# AnalyzeTemporaryDtors: true
-FormatStyle: file
+  modernize-*
+WarningsAsErrors: false
+HeaderFilterRegex: '^(.*/src/|.*/include/mon_projet/)'
+FormatStyle:  Google
+AnalyzeTemporaryDtors: false
 CheckOptions:
-  - key: modernize-use-auto.MinTypeNameLength
+  - key: modernize-use-trailing-return-type
     value: '0'
-  - key: readability-identifier-naming.ClassCase
-    value: CamelCase
-  - key: readability-identifier-naming.FunctionCase
-    value: camelBack
-  - key: readability-identifier-naming.VariableCase
-    value: lower_case
-  - key: cppcoreguidelines-pro-type-reinterpret-cast.WarnOnCastAlign
-    value: 'true'
