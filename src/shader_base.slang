@@ -13,7 +13,7 @@ static float3 colors[3] = float3[](
 struct VertexOutput
 {
     float3 color;
-    float4 sv_position: SV_Position;
+    float4 sv_position : SV_Position;
 };
 
 [shader("vertex")]
@@ -28,5 +28,6 @@ VertexOutput vertMain(uint vid : SV_VertexID)
 [shader("fragment")]
 float4 fragMain(VertexOutput inVert) : SV_Target
 {
-    return float4(inVert.color, 1.0);
+    float3 color = inVert.color;
+    return float4(color, 1.0);
 }
