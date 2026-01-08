@@ -64,3 +64,6 @@ CMakeUserPresets.json
 build/
 out/
 .cache/
+
+# Tracy
+tools/tracy
