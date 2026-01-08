@@ -6,6 +6,15 @@
       "features": [
         "vulkan"
       ]
+    },
+    {
+      "name": "tracy",
+      "features": [
+        "cli-tools",
+        "gui-tools",
+        "verbose",
+        "fibers"
+      ]
     }
   ]
 }

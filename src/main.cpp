@@ -27,6 +27,18 @@ import vulkan_hpp;
 #define DEBUG_FUNCTION_LOG()
 #endif
 
+#if defined(TRACY_ENABLE)
+
+#if defined(__clang__) || defined(__GNUC__)
+#define TracyFunction __PRETTY_FUNCTION__
+#elif defined(_MSC_VER)
+#define TracyFunction __FUNCSIG__
+#endif
+
+#include <tracy/Tracy.hpp>
+
+#endif
+
 const std::vector<char const *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
 #if defined(_DEBUG)
@@ -128,6 +140,10 @@ class HelloTriangleApplication
     void mainLoop()
     {
         DEBUG_FUNCTION_LOG();
+#if defined(_DEBUG) && defined(TRACY_ENABLE)
+        ZoneScoped;
+#endif
+        bool minimized = false;
         SDL_ShowWindow(window);
 
         while (not shouldBeClose)
@@ -375,6 +391,9 @@ class HelloTriangleApplication
     void createSwapChain()
     {
         DEBUG_FUNCTION_LOG();
+#if defined(_DEBUG) && defined(TRACY_ENABLE)
+        ZoneScoped;
+#endif
         auto surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
         swapChainSurfaceFormat   = chooseSwapSurfaceFormat(physicalDevice.getSurfaceFormatsKHR(surface));
         swapChainExtent          = chooseSwapExtent(surfaceCapabilities);
@@ -611,6 +630,9 @@ class HelloTriangleApplication
     void drawFrame()
     {
         DEBUG_FUNCTION_LOG();
+#if defined(_DEBUG) && defined(TRACY_ENABLE)
+        ZoneScoped;
+#endif
         auto fenceResult = device.waitForFences(*inFlightFences[frameIndex], vk::True, UINT64_MAX);
         if (fenceResult != vk::Result::eSuccess)
         {
@@ -792,6 +814,9 @@ class HelloTriangleApplication
 
 int main()
 {
+#if defined(_DEBUG) && defined(TRACY_ENABLE)
+    ZoneScoped;
+#endif
     HelloTriangleApplication app;
 
     try

@@ -63,7 +63,9 @@
             "description": "x64 build using Clang in Debug mode with sanitizers enabled",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "ENABLE_SANITIZERS": "OFF"
+                "ENABLE_SANITIZERS": "OFF",
+                "TRACY_ENABLE": "ON",
+                "TRACY_ON_DEMAND": "ON"
             }
         },
         {

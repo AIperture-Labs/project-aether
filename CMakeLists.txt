@@ -63,6 +63,7 @@ if(ENABLE_TESTING)
     endif()
 endif()
 
+
 #TODO: option(BUILD_DOC "Build the project's documentation" OFF)
 
 #TODO:
@@ -104,6 +105,9 @@ endif()
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(SDL3 CONFIG REQUIRED)
+if(TRACY_ENABLE)
+    find_package(Tracy CONFIG REQUIRED)
+endif()
 
 # set up Vulkan C++ module only if enabled
 if(ENABLE_CPP20_MODULE)
@@ -211,19 +215,19 @@ endfunction()
 
 function(add_slang_shader_target TARGET)
     cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
-    
+
     # Use the current source directory relative to the project source
-    file(RELATIVE_PATH RELATIVE_SOURCE_DIR 
-        ${CMAKE_SOURCE_DIR} 
+    file(RELATIVE_PATH RELATIVE_SOURCE_DIR
+        ${CMAKE_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}
     )
-    
+
     # Create output directory matching source structure
     set(SHADERS_BINARY_DIR ${CMAKE_BINARY_DIR}/${RELATIVE_SOURCE_DIR})
-    
+
     set(ENTRY_POINTS -entry vertMain -entry fragMain)
     set(PROFILES -profile spirv_1_4)
-    
+
     add_custom_command(
         OUTPUT ${SHADERS_BINARY_DIR}/slang.spv
         COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_BINARY_DIR}
@@ -233,7 +237,7 @@ function(add_slang_shader_target TARGET)
         COMMENT "Compiling Slang Shaders to ${RELATIVE_SOURCE_DIR}"
         VERBATIM
     )
-    
+
     add_custom_target(${TARGET} DEPENDS ${SHADERS_BINARY_DIR}/slang.spv)
 endfunction()
 
@@ -262,6 +266,17 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
             "${CCDB_DST}"
         )
     endif()
+endif()
+
+if(TRACY_ENABLE)
+    set(TRACY_SRC "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/tools/tracy")
+    set(TRACY_DST "${CMAKE_SOURCE_DIR}/tools/tracy")
+    message(${TRACY_SRC})
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E create_symlink
+        "${TRACY_SRC}"
+        "${TRACY_DST}"
+    )
 endif()
 
 
