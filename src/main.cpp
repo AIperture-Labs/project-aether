@@ -77,13 +77,17 @@ class HelloTriangleApplication
     std::vector<vk::Image>           swapChainImages;
     vk::SurfaceFormatKHR             swapChainSurfaceFormat;
     vk::Extent2D                     swapChainExtent;
-    std::vector<vk::ImageView>       swapChainImageViews;
+    std::vector<vk::raii::ImageView>       swapChainImageViews;
 
-    vk::PipelineLayout pipelineLayout   = nullptr;
-    vk::Pipeline       graphicsPipeline = nullptr;
+    vk::raii::PipelineLayout pipelineLayout   = nullptr;
+    vk::raii::Pipeline       graphicsPipeline = nullptr;
 
     vk::raii::CommandPool   commandPool   = nullptr;
     vk::raii::CommandBuffer commandBuffer = nullptr;
+
+    vk::raii::Semaphore presentCompleteSemaphore = nullptr;
+    vk::raii::Semaphore renderFinishedSemaphore  = nullptr;
+    vk::raii::Fence     drawFence                = nullptr;
 
     std::vector<const char *> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName,
@@ -115,6 +119,7 @@ class HelloTriangleApplication
         createGraphicsPipeline();
         createCommandPool();
         createCommandBuffer();
+        createSyncObjects();
     }
 
     void mainLoop()
@@ -136,7 +141,9 @@ class HelloTriangleApplication
                         break;
                 }
             }
+            drawFrame();
         }
+        device.waitIdle();
     }
 
     void cleanup()
@@ -275,17 +282,17 @@ class HelloTriangleApplication
             bool supportsGraphics = std::ranges::any_of(queueFamilies, [](auto const &qfp) {
                 return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
             });
-            
+
             // Check if all required device extensions are available
             auto availableDeviceExtensions     = device.enumerateDeviceExtensionProperties();
             bool supportsAllRequiredExtensions = std::ranges::all_of(
-requiredDeviceExtension,
+                requiredDeviceExtension,
                 [&availableDeviceExtensions](auto const &requiredDeviceExtension) {
                     return std::ranges::any_of(availableDeviceExtensions,
                                                [requiredDeviceExtension](auto const &availableDeviceExtension) {
-                    return strcmp(availableDeviceExtension.extensionName,
+                                                   return strcmp(availableDeviceExtension.extensionName,
                                                                  requiredDeviceExtension) == 0;
-                });
+                                               });
                 });
 
             auto features = device.template getFeatures2<vk::PhysicalDeviceFeatures2,
@@ -301,7 +308,7 @@ requiredDeviceExtension,
             return supportsVulkan1_3 && supportsGraphics && supportsAllRequiredExtensions && supportsRequiredFeatures;
         });
         if (devIter != devices.end())
-{
+        {
             physicalDevice = *devIter;
         }
         else
@@ -336,11 +343,13 @@ requiredDeviceExtension,
 
         // query for Vulkan 1.3 features
         vk::StructureChain<vk::PhysicalDeviceFeatures2,
+                           vk::PhysicalDeviceVulkan11Features,
                            vk::PhysicalDeviceVulkan13Features,
                            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
             featureChain = {
-                {},                             // vk::PhysicalDeviceFeatures2
-                {.dynamicRendering = true},     // vk::PhysicalDeviceVulkan13Features
+                {},                                                            // vk::PhysicalDeviceFeatures2
+                {.shaderDrawParameters = vk::True},                            // vk::PhysicalDeviceVulkan11Features
+                {.synchronization2 = vk::True, .dynamicRendering = vk::True},  // vk::PhysicalDeviceVulkan13Features
                 {.extendedDynamicState = true}  // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
             };
 
@@ -390,8 +399,7 @@ requiredDeviceExtension,
     void createImagesViews()
     {
         DEBUG_FUNCTION_LOG();
-        // TODO: assert(swapChainImageViews.empty());
-        swapChainImageViews.clear();
+        assert(swapChainImageViews.empty());
 
         vk::ImageViewCreateInfo imageViewCreateInfo{.viewType         = vk::ImageViewType::e2D,
                                                     .format           = swapChainSurfaceFormat.format,
@@ -400,9 +408,7 @@ requiredDeviceExtension,
         for (auto &image : swapChainImages)
         {
             imageViewCreateInfo.image = image;
-            // XXX: swapChainImageViews.emplace_back(device, imageViewCreateInfo);
-            // Object construction make by emplace raise an error.
-            swapChainImageViews.push_back(vk::raii::ImageView(device, imageViewCreateInfo));
+            swapChainImageViews.emplace_back(device, imageViewCreateInfo);
         }
     }
 
@@ -470,7 +476,7 @@ requiredDeviceExtension,
              .pMultisampleState   = &multisampling,
              .pColorBlendState    = &colorBlending,
              .pDynamicState       = &dynamicState,
-             .layout              = pipelineLayout,
+             .layout              = *pipelineLayout,
              .renderPass          = nullptr},
             {.colorAttachmentCount = 1, .pColorAttachmentFormats = &swapChainSurfaceFormat.format}};
 
@@ -522,7 +528,7 @@ requiredDeviceExtension,
                                            .pColorAttachments    = &attachmentInfo};
 
         commandBuffer.beginRendering(renderingInfo);
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, graphicsPipeline);
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *graphicsPipeline);
         commandBuffer.setViewport(0,
                                   vk::Viewport(0.0f,
                                                0.0f,
@@ -574,6 +580,42 @@ requiredDeviceExtension,
                                                   .imageMemoryBarrierCount = 1,
                                                   .pImageMemoryBarriers    = &barrier};
         commandBuffer.pipelineBarrier2(dependencyInfo);
+    }
+
+    void createSyncObjects()
+    {
+        DEBUG_FUNCTION_LOG();
+        presentCompleteSemaphore = vk::raii::Semaphore(device, vk::SemaphoreCreateInfo());
+        renderFinishedSemaphore  = vk::raii::Semaphore(device, vk::SemaphoreCreateInfo());
+        drawFence                = vk::raii::Fence(device, {.flags = vk::FenceCreateFlagBits::eSignaled});
+    }
+
+    void drawFrame()
+    {
+        DEBUG_FUNCTION_LOG();
+        auto fenceResult          = device.waitForFences(*drawFence, vk::True, UINT64_MAX);
+        auto [result, imageIndex] = swapChain.acquireNextImage(UINT64_MAX, *presentCompleteSemaphore, nullptr);
+
+        recordCommandBuffer(imageIndex);
+        device.resetFences(*drawFence);
+
+        vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+        const vk::SubmitInfo   submitInfo{.waitSemaphoreCount   = 1,
+                                          .pWaitSemaphores      = &*presentCompleteSemaphore,
+                                          .pWaitDstStageMask    = &waitDestinationStageMask,
+                                          .commandBufferCount   = 1,
+                                          .pCommandBuffers      = &*commandBuffer,
+                                          .signalSemaphoreCount = 1,
+                                          .pSignalSemaphores    = &*renderFinishedSemaphore};
+        queue.submit(submitInfo, *drawFence);
+
+        const vk::PresentInfoKHR presentInfoKHR{.waitSemaphoreCount = 1,
+                                                .pWaitSemaphores    = &*renderFinishedSemaphore,
+                                                .swapchainCount     = 1,
+                                                .pSwapchains        = &*swapChain,
+                                                .pImageIndices      = &imageIndex};
+
+        result = queue.presentKHR(presentInfoKHR);
     }
 
     [[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const
