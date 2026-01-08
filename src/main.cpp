@@ -17,10 +17,15 @@
 #else
 import vulkan_hpp;
 #endif
-
 // SDL headers
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
+
+#if defined(_DEBUG)
+#define DEBUG_FUNCTION_LOG() std::cout << "Entry in function: " << __func__ << "();" << std::endl << std::endl;
+#else
+#define DEBUG_FUNCTION_LOG()
+#endif
 
 const std::vector<char const *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -89,6 +94,7 @@ class HelloTriangleApplication
 
     void initWindow()
     {
+        DEBUG_FUNCTION_LOG();
         if (not SDL_Init(SDL_INIT_VIDEO))
             throw SDLException("SDL_Init failed");
 
@@ -113,6 +119,7 @@ class HelloTriangleApplication
 
     void mainLoop()
     {
+        DEBUG_FUNCTION_LOG();
         SDL_ShowWindow(window);
 
         while (not shouldBeClose)
@@ -140,6 +147,7 @@ class HelloTriangleApplication
 
     void createInstance()
     {
+        DEBUG_FUNCTION_LOG();
         constexpr vk::ApplicationInfo appInfo{.pApplicationName   = "Hello Triangle",
                                               .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
                                               .pEngineName        = "Aether Game Engine",
@@ -187,6 +195,7 @@ class HelloTriangleApplication
 
     void setupDebugMessenger()
     {
+        DEBUG_FUNCTION_LOG();
         if (not enableValidationLayers)
         {
             return;
@@ -214,6 +223,7 @@ class HelloTriangleApplication
 
     void createSurface()
     {
+        DEBUG_FUNCTION_LOG();
         VkSurfaceKHR _surface;
         if (not SDL_Vulkan_CreateSurface(window, *instance, nullptr, &_surface))
         {
@@ -254,6 +264,7 @@ class HelloTriangleApplication
 
     void pickPhysicalDevice()
     {
+        DEBUG_FUNCTION_LOG();
         std::vector<vk::raii::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
         if (devices.empty())
         {
@@ -299,6 +310,7 @@ class HelloTriangleApplication
     // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/01_Presentation/00_Window_surface.html#_creating_the_presentation_queue
     void createLogicalDevice()
     {
+        DEBUG_FUNCTION_LOG();
         // find the index of the first queue family that supports graphics
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
 
@@ -344,6 +356,7 @@ class HelloTriangleApplication
 
     void createSwapChain()
     {
+        DEBUG_FUNCTION_LOG();
         auto surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
         swapChainSurfaceFormat   = chooseSwapSurfaceFormat(physicalDevice.getSurfaceFormatsKHR(surface));
         swapChainExtent          = chooseSwapExtent(surfaceCapabilities);
@@ -370,6 +383,7 @@ class HelloTriangleApplication
 
     void createImagesViews()
     {
+        DEBUG_FUNCTION_LOG();
         // TODO: assert(swapChainImageViews.empty());
         swapChainImageViews.clear();
 
@@ -388,6 +402,7 @@ class HelloTriangleApplication
 
     void createGraphicsPipeline()
     {
+        DEBUG_FUNCTION_LOG();
         std::string filename   = "slang.spv";
         auto        shaderCode = readFile(filename);
 
@@ -459,6 +474,7 @@ class HelloTriangleApplication
 
     void createCommandPool()
     {
+        DEBUG_FUNCTION_LOG();
         vk::CommandPoolCreateInfo poolInfo{.flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
                                            .queueFamilyIndex = queueIndex};
         commandPool = vk::raii::CommandPool(device, poolInfo);
@@ -466,6 +482,7 @@ class HelloTriangleApplication
 
     void createCommandBuffer()
     {
+        DEBUG_FUNCTION_LOG();
         vk::CommandBufferAllocateInfo allocInfo{.commandPool        = commandPool,
                                                 .level              = vk::CommandBufferLevel::ePrimary,
                                                 .commandBufferCount = 1};
@@ -474,6 +491,7 @@ class HelloTriangleApplication
 
     void recordCommandBuffer(uint32_t imageIndex)
     {
+        DEBUG_FUNCTION_LOG();
         commandBuffer.begin({});
 
         // Before starting rendering, transition the swapchain image to COLOR_ATTACHMENT_OPTIMAL
@@ -531,6 +549,7 @@ class HelloTriangleApplication
                                  vk::PipelineStageFlags2 srcStageMask,
                                  vk::PipelineStageFlags2 dstStageMask)
     {
+        DEBUG_FUNCTION_LOG();
         vk::ImageMemoryBarrier2 barrier        = {.srcStageMask        = srcStageMask,
                                                   .srcAccessMask       = srcAccessMask,
                                                   .dstStageMask        = dstStageMask,
@@ -553,6 +572,7 @@ class HelloTriangleApplication
 
     [[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const
     {
+        DEBUG_FUNCTION_LOG();
         vk::ShaderModuleCreateInfo createInfo{.codeSize = code.size() * sizeof(char),
                                               .pCode    = reinterpret_cast<const uint32_t *>(code.data())};
         vk::raii::ShaderModule     shaderModule{device, createInfo};
@@ -561,6 +581,7 @@ class HelloTriangleApplication
 
     static uint32_t calculateMinImageCount(const vk::SurfaceCapabilitiesKHR &surfaceCapabilities)
     {
+        DEBUG_FUNCTION_LOG();
         auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
         minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount)
                             ? surfaceCapabilities.maxImageCount
@@ -570,6 +591,7 @@ class HelloTriangleApplication
 
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> &availableFormats)
     {
+        DEBUG_FUNCTION_LOG();
         // TODO: switch to ranges any_of ???
         for (const auto &availableFormat : availableFormats)
         {
@@ -584,6 +606,7 @@ class HelloTriangleApplication
 
     vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR> &availablePresentModes)
     {
+        DEBUG_FUNCTION_LOG();
         // TODO: switch to ranges any_of ???
         for (const auto &availablePresentMode : availablePresentModes)
         {
@@ -597,6 +620,7 @@ class HelloTriangleApplication
 
     vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR &capabilities)
     {
+        DEBUG_FUNCTION_LOG();
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
         {
             return capabilities.currentExtent;
@@ -617,6 +641,7 @@ class HelloTriangleApplication
 
     std::vector<const char *> getRequiredExtensions()
     {
+        DEBUG_FUNCTION_LOG();
         uint32_t sdlExtensionCount = 0;
         // return in Windows
         // - sdlExtensions[0] = VK_KHR_surface
@@ -638,6 +663,7 @@ class HelloTriangleApplication
         if (severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eError ||
             severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)
             std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage
+                      << std::endl
                       << std::endl;
 
         return vk::False;
@@ -645,6 +671,7 @@ class HelloTriangleApplication
 
     bool isDeviceSuitable(vk::raii::PhysicalDevice physicalDevice)
     {
+        DEBUG_FUNCTION_LOG();
         auto deviceProperties = physicalDevice.getProperties();
         auto deviceFeatures   = physicalDevice.getFeatures();
 
