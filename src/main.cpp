@@ -72,11 +72,11 @@ class HelloTriangleApplication
 {
    private:
     static constexpr const char     *window_title  = "Aether Game Engine";
-    static constexpr uint16_t        window_width  = 800;
-    static constexpr uint16_t        window_height = 600;
+    uint16_t                         window_width  = 800;
+    uint16_t                         window_height = 600;
     bool                             shouldBeClose = false;
     static constexpr SDL_WindowFlags window_flags =
-        SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+        SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE;
 
     SDL_Window                      *window = nullptr;
     vk::raii::Context                context;
@@ -103,6 +103,8 @@ class HelloTriangleApplication
     std::vector<vk::raii::Semaphore> renderFinishedSemaphores;
     std::vector<vk::raii::Fence>     inFlightFences;
     uint32_t                         frameIndex = 0;
+
+    bool framebufferResized = false;
 
     std::vector<const char *> requiredDeviceExtension = {
         vk::KHRSwapchainExtensionName,
@@ -150,23 +152,34 @@ class HelloTriangleApplication
         {
             for (SDL_Event event; SDL_PollEvent(&event);)
             {
-                switch (event.type)
+                if (event.type == SDL_EVENT_QUIT)
                 {
-                    case SDL_EVENT_QUIT:
-                        shouldBeClose = true;
-                        break;
-
-                    default:
-                        break;
+                    shouldBeClose = true;
+                }
+                else if (event.type == SDL_EVENT_WINDOW_MINIMIZED)
+                {
+                    std::cout << "Window is minimized!" << std::endl;
+                    minimized = true;
+                }
+                else if (event.type == SDL_EVENT_WINDOW_RESTORED)
+                {
+                    std::cout << "Window is restored!" << std::endl;
+                    minimized = false;
                 }
             }
-            drawFrame();
+            if (not minimized)
+            {
+                drawFrame();
+            }
         }
         device.waitIdle();
+        std::cout << "Quitting Hello Triangle Application." << std::endl;
     }
 
     void cleanup()
     {
+        cleanupSwapChain();
+
         SDL_DestroyWindow(window);
         SDL_Quit();
     }
@@ -386,6 +399,28 @@ class HelloTriangleApplication
 
         device = vk::raii::Device(physicalDevice, deviceCreateInfo);
         queue  = vk::raii::Queue(device, queueIndex, 0);
+    }
+
+    void cleanupSwapChain()
+    {
+#if defined(_DEBUG) && defined(TRACY_ENABLE)
+        ZoneScoped;
+#endif
+        swapChainImageViews.clear();
+        swapChain = nullptr;
+    }
+
+    void recreateSwapChain()
+    {
+#if defined(_DEBUG) && defined(TRACY_ENABLE)
+        ZoneScoped;
+#endif
+        device.waitIdle();
+
+        cleanupSwapChain();
+
+        createSwapChain();
+        createImagesViews();
     }
 
     void createSwapChain()
@@ -643,6 +678,18 @@ class HelloTriangleApplication
         auto [acquireResult, imageIndex] =
             swapChain.acquireNextImage(UINT64_MAX, *presentCompleteSemaphores[frameIndex], nullptr);
 
+        if (acquireResult == vk::Result::eErrorOutOfDateKHR)
+        {
+            recreateSwapChain();
+            return;
+        }
+
+        if (acquireResult != vk::Result::eSuccess && acquireResult != vk::Result::eSuboptimalKHR)
+        {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
+
+        device.resetFences(*inFlightFences[frameIndex]);
         commandBuffers[frameIndex].reset();
         recordCommandBuffer(imageIndex);
 
@@ -656,25 +703,36 @@ class HelloTriangleApplication
                                           .pSignalSemaphores    = &*renderFinishedSemaphores[frameIndex]};
         queue.submit(submitInfo, *inFlightFences[frameIndex]);
 
-        const vk::PresentInfoKHR presentInfoKHR{.waitSemaphoreCount = 1,
-                                                .pWaitSemaphores    = &*renderFinishedSemaphores[frameIndex],
-                                                .swapchainCount     = 1,
-                                                .pSwapchains        = &*swapChain,
-                                                .pImageIndices      = &imageIndex};
-
-        vk::Result result = queue.presentKHR(presentInfoKHR);
-        switch (result)
+        try
         {
-            case vk::Result::eSuccess:
-                break;
-            case vk::Result::eSuboptimalKHR:
-                std::cout << "vk::Queue::presentKHR returned vk::Result::eSuboptimalKHR !\n";
-                break;
-            default:
-                break;  // an unexpected result is returned!
+            const vk::PresentInfoKHR presentInfoKHR{.waitSemaphoreCount = 1,
+                                                    .pWaitSemaphores    = &*renderFinishedSemaphores[imageIndex],
+                                                    .swapchainCount     = 1,
+                                                    .pSwapchains        = &*swapChain,
+                                                    .pImageIndices      = &imageIndex};
+            vk::Result               result = queue.presentKHR(presentInfoKHR);
+            if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || framebufferResized)
+            {
+                framebufferResized = false;
+                recreateSwapChain();
+            }
+            else if (result != vk::Result::eSuccess)
+            {
+                throw std::runtime_error("failed to present swap chain image!");
+            }
+        } catch (const vk::SystemError &e)
+        {
+            if (e.code().value() == static_cast<int>(vk::Result::eErrorOutOfDateKHR))
+            {
+                recreateSwapChain();
+                return;
+            }
+            else
+            {
+                throw;
+            }
         }
         frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
-        ;
     }
 
     [[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const
