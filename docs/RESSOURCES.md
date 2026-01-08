@@ -4,7 +4,7 @@
 - [VsCode clang-tidy](https://devblogs.microsoft.com/cppblog/visual-studio-code-c-december-2021-update-clang-tidy/)
 - [CMake Introduction](https://cliutils.gitlab.io/modern-cmake/chapters/features/small.html)
 - [CMake example projet - box2d-lite](https://github.com/esweet431/box2d-lite)
-- [VsCode CMake extension doc](https://github.com/microsoft/vscode-cmake-tools/blob/HEAD/docs/README.md)
+- [VsCode CMake Tools extension doc](https://github.com/microsoft/vscode-cmake-tools/blob/HEAD/docs/README.md)
 - [Clang-format example from Blender](https://github.com/blender/blender/blob/main/.clang-format)
 - [Clang-tidy example from Blender](https://github.com/blender/blender/blob/main/.clang-tidy)
 
@@ -19,3 +19,8 @@
 - [SDL3 Vulkan Documentation Section][https://wiki.libsdl.org/SDL3/CategoryVulkan]
 
 - [Blog Moonside Games](https://moonside.games/)
+
+- [Tracy Profiler](https://github.com/wolfpld/tracy)
+- [YouTube - An Introduction to Tracy Profiler in C++ - Marcos Slomp - CppCon 2023 ](https://www.youtube.com/watch?v=ghXk3Bk5F2U&t=37s)
+
+- [Vulkan Guide](https://vkguide.dev/)
