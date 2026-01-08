@@ -77,7 +77,7 @@ class HelloTriangleApplication
     std::vector<vk::Image>           swapChainImages;
     vk::SurfaceFormatKHR             swapChainSurfaceFormat;
     vk::Extent2D                     swapChainExtent;
-    std::vector<vk::raii::ImageView>       swapChainImageViews;
+    std::vector<vk::raii::ImageView> swapChainImageViews;
 
     vk::raii::PipelineLayout pipelineLayout   = nullptr;
     vk::raii::Pipeline       graphicsPipeline = nullptr;
@@ -403,7 +403,11 @@ class HelloTriangleApplication
 
         vk::ImageViewCreateInfo imageViewCreateInfo{.viewType         = vk::ImageViewType::e2D,
                                                     .format           = swapChainSurfaceFormat.format,
-                                                    .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}};
+                                                    .subresourceRange = {.aspectMask = vk::ImageAspectFlagBits::eColor,
+                                                                         .baseMipLevel   = 0,
+                                                                         .levelCount     = 1,
+                                                                         .baseArrayLayer = 0,
+                                                                         .layerCount     = 1}};
 
         for (auto &image : swapChainImages)
         {
@@ -522,8 +526,8 @@ class HelloTriangleApplication
                                                       .storeOp     = vk::AttachmentStoreOp::eStore,
                                                       .clearValue  = clearColor};
 
-        vk::RenderingInfo renderingInfo = {.renderArea           = {.offset = {0, 0}, .extent = swapChainExtent},
-                                           .layerCount           = 1,
+        vk::RenderingInfo renderingInfo = {.renderArea = {.offset = {.x = 0, .y = 0}, .extent = swapChainExtent},
+                                           .layerCount = 1,
                                            .colorAttachmentCount = 1,
                                            .pColorAttachments    = &attachmentInfo};
 
