@@ -14,6 +14,7 @@
         "NathanJ.cppcheck-plugin",
         "nefrob.vscode-just-syntax",
         "llvm-vs-code-extensions.vscode-clangd",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "vadimcn.vscode-lldb"
     ]
 }

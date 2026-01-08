@@ -15,7 +15,7 @@
     ],
     "configurations": [
         {
-            "name": "(Windows) Launch Vulkan",
+            "name": "(Windows) Debug Target",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
@@ -37,10 +37,10 @@
                 }
             ],
             "console": "integratedTerminal",
-            "preLaunchTask": "CMake: clean rebuild"
+            "preLaunchTask": "CMake: build"
         },
         {
-            "name": "(Windows) Launch Vulkan Shaders",
+            "name": "(Windows) Debug Target and Tracy",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
@@ -59,103 +59,158 @@
                 {
                     "name": "VK_INSTANCE_LAYERS",
                     "value": "VK_LAYER_KHRONOS_validation"
-                },
-                {
-                    "name": "VK_VALIDATION_FEATURES",
-                    "value": "+DEBUG_PRINTF,-CORE_VALIDATION"
-                },
-                {
-                    "name": "VK_DBG_LAYER_LEVEL",
-                    "value": "info"
                 }
             ],
             "console": "integratedTerminal",
-            "preLaunchTask": "CMake: clean rebuild"
+            "preLaunchTask": "Build and Tracy"
         },
         {
-            "name": "(Windows) Launch Vulkan Shaders - printf-only",
-            "type": "cppvsdbg",
+            "name": "(LLDB) Debug Target",
+            "type": "lldb",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
             "args": [],
-            "stopAtEntry": false,
             "cwd": "${command:cmake.getLaunchTargetDirectory}",
-            "environment": [
-                {
-                    "name": "PATH",
-                    "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
-                },
-                {
-                    "name": "VK_LAYER_PATH",
-                    "value": "${env:VULKAN_SDK}/Bin"
-                },
-                {
-                    "name": "VK_LAYER_PRINTF_ONLY_PRESET",
-                    "value": "1"
-                },
-                {
-                    "name": "VK_LAYER_PRINTF_TO_STDOUT",
-                    "value": "1"
-                }
-            ],
-            "console": "integratedTerminal",
-            "preLaunchTask": "CMake: clean rebuild"
-        },
-        {
-            // FIXME: not run
-            "name": "(ctest) Launch",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "cwd": "${command:cmake.getLaunchTargetDirectory}",
-            "presentation": {
-                "hidden": true,
+            "env": {
+                "PATH":"${env:PATH}:${command:cmake.getLaunchTargetDirectory}",
+                "VK_LAYER_PATH":"${env:VULKAN_SDK}/Bin",
+                "VK_INSTANCE_LAYERS": "VK_LAYER_KHRONOS_validation"
             },
-            // Resolved by CMake Tools:
-            "program": "${cmake.testProgram}",
-            "args": [
-                "${cmake.testArgs}"
-            ],
-            "environment": [
-                {
-                    "name": "VK_LAYER_PATH",
-                    "value": "${env:VULKAN_SDK}/Bin"
-                },
-                {
-                    "name": "PATH",
-                    "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
-                },
-                {
-                    "name": "VK_INSTANCE_LAYERS",
-                    "value": "VK_LAYER_KHRONOS_validation"
-                }
-            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "CMake: build"
         },
         {
-            "name": "(shaders) Launch RenderDoc",
-            "type": "cppvsdbg",
+            "name": "(LLDB) Debug Target and Tracy",
+            "type": "lldb",
             "request": "launch",
-            "program": "${env:ProgramFiles}/RenderDoc/qrenderdoc.exe",
-            "args": [
-                "--capture-file",
-                "${workspaceFolder}/capture.rdc",
-                "${command:cmake.launchTargetPath}"
-            ],
-            "stopAtEntry": false,
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [],
             "cwd": "${command:cmake.getLaunchTargetDirectory}",
-            "environment": [
-                {
-                    "name": "VK_LAYER_PATH",
-                    "value": "${env:VULKAN_SDK}/Bin"
-                },
-                {
-                    "name": "PATH",
-                    "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
-                },
-                {
-                    "name": "VK_INSTANCE_LAYERS",
-                    "value": "VK_LAYER_KHRONOS_validation"
-                }
-            ],
-        }
+            "env": {
+                "PATH":"${env:PATH}:${command:cmake.getLaunchTargetDirectory}",
+                "VK_LAYER_PATH":"${env:VULKAN_SDK}/Bin",
+                "VK_INSTANCE_LAYERS": "VK_LAYER_KHRONOS_validation"
+            },
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build and Tracy"
+        },
+        // {
+        //     "name": "(Windows) Launch Vulkan Shaders",
+        //     "type": "cppvsdbg",
+        //     "request": "launch",
+        //     "program": "${command:cmake.launchTargetPath}",
+        //     "args": [],
+        //     "stopAtEntry": false,
+        //     "cwd": "${command:cmake.getLaunchTargetDirectory}",
+        //     "environment": [
+        //         {
+        //             "name": "PATH",
+        //             "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+        //         },
+        //         {
+        //             "name": "VK_LAYER_PATH",
+        //             "value": "${env:VULKAN_SDK}/Bin"
+        //         },
+        //         {
+        //             "name": "VK_INSTANCE_LAYERS",
+        //             "value": "VK_LAYER_KHRONOS_validation"
+        //         },
+        //         {
+        //             "name": "VK_VALIDATION_FEATURES",
+        //             "value": "+DEBUG_PRINTF,-CORE_VALIDATION"
+        //         },
+        //         {
+        //             "name": "VK_DBG_LAYER_LEVEL",
+        //             "value": "info"
+        //         }
+        //     ],
+        //     "console": "integratedTerminal",
+        //     "preLaunchTask": "CMake: clean rebuild"
+        // },
+        // {
+        //     "name": "(Windows) Launch Vulkan Shaders - printf-only",
+        //     "type": "cppvsdbg",
+        //     "request": "launch",
+        //     "program": "${command:cmake.launchTargetPath}",
+        //     "args": [],
+        //     "stopAtEntry": false,
+        //     "cwd": "${command:cmake.getLaunchTargetDirectory}",
+        //     "environment": [
+        //         {
+        //             "name": "PATH",
+        //             "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+        //         },
+        //         {
+        //             "name": "VK_LAYER_PATH",
+        //             "value": "${env:VULKAN_SDK}/Bin"
+        //         },
+        //         {
+        //             "name": "VK_LAYER_PRINTF_ONLY_PRESET",
+        //             "value": "1"
+        //         },
+        //         {
+        //             "name": "VK_LAYER_PRINTF_TO_STDOUT",
+        //             "value": "1"
+        //         }
+        //     ],
+        //     "console": "integratedTerminal",
+        //     "preLaunchTask": "CMake: clean rebuild"
+        // },
+        // {
+        //     // FIXME: not run
+        //     "name": "(ctest) Launch",
+        //     "type": "cppvsdbg",
+        //     "request": "launch",
+        //     "cwd": "${command:cmake.getLaunchTargetDirectory}",
+        //     "presentation": {
+        //         "hidden": true,
+        //     },
+        //     // Resolved by CMake Tools:
+        //     "program": "${cmake.testProgram}",
+        //     "args": [
+        //         "${cmake.testArgs}"
+        //     ],
+        //     "environment": [
+        //         {
+        //             "name": "VK_LAYER_PATH",
+        //             "value": "${env:VULKAN_SDK}/Bin"
+        //         },
+        //         {
+        //             "name": "PATH",
+        //             "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+        //         },
+        //         {
+        //             "name": "VK_INSTANCE_LAYERS",
+        //             "value": "VK_LAYER_KHRONOS_validation"
+        //         }
+        //     ],
+        // },
+        // {
+        //     "name": "(shaders) Launch RenderDoc",
+        //     "type": "cppvsdbg",
+        //     "request": "launch",
+        //     "program": "${env:ProgramFiles}/RenderDoc/qrenderdoc.exe",
+        //     "args": [
+        //         "--capture-file",
+        //         "${workspaceFolder}/capture.rdc",
+        //         "${command:cmake.launchTargetPath}"
+        //     ],
+        //     "stopAtEntry": false,
+        //     "cwd": "${command:cmake.getLaunchTargetDirectory}",
+        //     "environment": [
+        //         {
+        //             "name": "VK_LAYER_PATH",
+        //             "value": "${env:VULKAN_SDK}/Bin"
+        //         },
+        //         {
+        //             "name": "PATH",
+        //             "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+        //         },
+        //         {
+        //             "name": "VK_INSTANCE_LAYERS",
+        //             "value": "VK_LAYER_KHRONOS_validation"
+        //         }
+        //     ],
+        // }
     ]
 }
