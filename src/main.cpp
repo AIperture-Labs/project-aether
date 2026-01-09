@@ -3,6 +3,7 @@
 
 // main.cpp
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -17,6 +18,8 @@
 #else
 import vulkan_hpp;
 #endif
+// Maths
+#include <glm/glm.hpp>
 // SDL headers
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
@@ -38,6 +41,27 @@ constexpr bool enableValidationLayers = false;
 #endif
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
+struct Vertex
+{
+    glm::vec2 pos;
+    glm::vec3 color;
+
+    static vk::VertexInputBindingDescription getBindingDescription()
+    {
+        return {0, sizeof(Vertex), vk::VertexInputRate::eVertex};
+    }
+
+    static std::array<vk::VertexInputAttributeDescription, 2> getAttributeDescriptions()
+    {
+        return {vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, pos)),
+                vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, color))};
+    }
+};
+
+const std::vector<Vertex> vertices = {{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                      {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+                                      {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
 
 /**
  * @class SDLException
@@ -474,7 +498,13 @@ class HelloTriangleApplication
                                                               .pName  = "fragMain"};
         vk::PipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageInfo, fragShaderStageInfo};
 
-        vk::PipelineVertexInputStateCreateInfo   vertexInputInfo;
+        auto                                   bindingDescription   = Vertex::getBindingDescription();
+        auto                                   attributeDescription = Vertex::getAttributeDescriptions();
+        vk::PipelineVertexInputStateCreateInfo vertexInputInfo{
+            .vertexBindingDescriptionCount   = 1,
+            .pVertexBindingDescriptions      = &bindingDescription,
+            .vertexAttributeDescriptionCount = attributeDescription.size(),
+            .pVertexAttributeDescriptions    = attributeDescription.data()};
         vk::PipelineInputAssemblyStateCreateInfo inputAssembly{.topology = vk::PrimitiveTopology::eTriangleList};
         vk::PipelineViewportStateCreateInfo      viewportState{.viewportCount = 1, .scissorCount = 1};
         vk::PipelineRasterizationStateCreateInfo rasterizer{.depthClampEnable        = vk::False,
