@@ -327,7 +327,9 @@ class HelloTriangleApplication
             // Check if any of the queue families support graphics operations
             auto queueFamilies    = device.getQueueFamilyProperties();
             bool supportsGraphics = std::ranges::any_of(queueFamilies, [](auto const &qfp) {
-                return !!(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
+                return static_cast<bool>(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
+            });
+
             });
 
             // Check if all required device extensions are available
