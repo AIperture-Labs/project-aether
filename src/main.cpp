@@ -21,23 +21,13 @@ import vulkan_hpp;
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 
-#if defined(_DEBUG)
-#define DEBUG_FUNCTION_LOG() std::cout << "Entry in function: " << __func__ << "();" << std::endl << std::endl;
-#else
-#define DEBUG_FUNCTION_LOG()
-#endif
-
-#if defined(TRACY_ENABLE)
 
 #if defined(__clang__) || defined(__GNUC__)
 #define TracyFunction __PRETTY_FUNCTION__
 #elif defined(_MSC_VER)
 #define TracyFunction __FUNCSIG__
 #endif
-
 #include <tracy/Tracy.hpp>
-
-#endif
 
 const std::vector<char const *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -115,7 +105,7 @@ class HelloTriangleApplication
 
     void initWindow()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         if (not SDL_Init(SDL_INIT_VIDEO))
             throw SDLException("SDL_Init failed");
 
@@ -126,6 +116,7 @@ class HelloTriangleApplication
 
     void initVulkan()
     {
+        ZoneScoped;
         createInstance();
         setupDebugMessenger();
         createSurface();
@@ -141,10 +132,7 @@ class HelloTriangleApplication
 
     void mainLoop()
     {
-        DEBUG_FUNCTION_LOG();
-#if defined(_DEBUG) && defined(TRACY_ENABLE)
         ZoneScoped;
-#endif
         bool minimized = false;
         SDL_ShowWindow(window);
 
@@ -178,6 +166,7 @@ class HelloTriangleApplication
 
     void cleanup()
     {
+        ZoneScoped;
         cleanupSwapChain();
 
         SDL_DestroyWindow(window);
@@ -186,7 +175,7 @@ class HelloTriangleApplication
 
     void createInstance()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         constexpr vk::ApplicationInfo appInfo{.pApplicationName   = "Hello Triangle",
                                               .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
                                               .pEngineName        = "Aether Game Engine",
@@ -234,7 +223,6 @@ class HelloTriangleApplication
 
     void setupDebugMessenger()
     {
-        DEBUG_FUNCTION_LOG();
         if (not enableValidationLayers)
         {
             return;
@@ -262,7 +250,7 @@ class HelloTriangleApplication
 
     void createSurface()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         VkSurfaceKHR _surface;
         if (not SDL_Vulkan_CreateSurface(window, *instance, nullptr, &_surface))
         {
@@ -303,7 +291,7 @@ class HelloTriangleApplication
 
     void pickPhysicalDevice()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         std::vector<vk::raii::PhysicalDevice> devices = instance.enumeratePhysicalDevices();
         const auto                            devIter = std::ranges::find_if(devices, [&](auto const &device) {
             // Check if the device supports the Vulkan 1.3 API version
@@ -355,7 +343,7 @@ class HelloTriangleApplication
     // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/01_Presentation/00_Window_surface.html#_creating_the_presentation_queue
     void createLogicalDevice()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         // find the index of the first queue family that supports graphics
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
 
@@ -403,18 +391,14 @@ class HelloTriangleApplication
 
     void cleanupSwapChain()
     {
-#if defined(_DEBUG) && defined(TRACY_ENABLE)
         ZoneScoped;
-#endif
         swapChainImageViews.clear();
         swapChain = nullptr;
     }
 
     void recreateSwapChain()
     {
-#if defined(_DEBUG) && defined(TRACY_ENABLE)
         ZoneScoped;
-#endif
         device.waitIdle();
 
         cleanupSwapChain();
@@ -425,10 +409,7 @@ class HelloTriangleApplication
 
     void createSwapChain()
     {
-        DEBUG_FUNCTION_LOG();
-#if defined(_DEBUG) && defined(TRACY_ENABLE)
         ZoneScoped;
-#endif
         auto surfaceCapabilities = physicalDevice.getSurfaceCapabilitiesKHR(surface);
         swapChainSurfaceFormat   = chooseSwapSurfaceFormat(physicalDevice.getSurfaceFormatsKHR(surface));
         swapChainExtent          = chooseSwapExtent(surfaceCapabilities);
@@ -455,7 +436,7 @@ class HelloTriangleApplication
 
     void createImagesViews()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         assert(swapChainImageViews.empty());
 
         vk::ImageViewCreateInfo imageViewCreateInfo{.viewType         = vk::ImageViewType::e2D,
@@ -475,7 +456,7 @@ class HelloTriangleApplication
 
     void createGraphicsPipeline()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         std::string filename   = "slang.spv";
         auto        shaderCode = readFile(filename);
 
@@ -547,7 +528,7 @@ class HelloTriangleApplication
 
     void createCommandPool()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         vk::CommandPoolCreateInfo poolInfo{.flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
                                            .queueFamilyIndex = queueIndex};
         commandPool = vk::raii::CommandPool(device, poolInfo);
@@ -555,7 +536,7 @@ class HelloTriangleApplication
 
     void createCommandBuffers()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         commandBuffers.clear();
         vk::CommandBufferAllocateInfo allocInfo{.commandPool        = commandPool,
                                                 .level              = vk::CommandBufferLevel::ePrimary,
@@ -565,7 +546,6 @@ class HelloTriangleApplication
 
     void recordCommandBuffer(uint32_t imageIndex)
     {
-        DEBUG_FUNCTION_LOG();
         auto &commandBuffer = commandBuffers[frameIndex];
         commandBuffer.begin({});
 
@@ -624,7 +604,7 @@ class HelloTriangleApplication
                                  vk::PipelineStageFlags2 srcStageMask,
                                  vk::PipelineStageFlags2 dstStageMask)
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         vk::ImageMemoryBarrier2 barrier        = {.srcStageMask        = srcStageMask,
                                                   .srcAccessMask       = srcAccessMask,
                                                   .dstStageMask        = dstStageMask,
@@ -647,7 +627,7 @@ class HelloTriangleApplication
 
     void createSyncObjects()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         assert(presentCompleteSemaphores.empty() && renderFinishedSemaphores.empty() && inFlightFences.empty());
 
         for (size_t i = 0; i < swapChainImages.size(); i++)
@@ -664,10 +644,7 @@ class HelloTriangleApplication
 
     void drawFrame()
     {
-        DEBUG_FUNCTION_LOG();
-#if defined(_DEBUG) && defined(TRACY_ENABLE)
         ZoneScoped;
-#endif
         auto fenceResult = device.waitForFences(*inFlightFences[frameIndex], vk::True, UINT64_MAX);
         if (fenceResult != vk::Result::eSuccess)
         {
@@ -737,7 +714,7 @@ class HelloTriangleApplication
 
     [[nodiscard]] vk::raii::ShaderModule createShaderModule(const std::vector<char> &code) const
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         vk::ShaderModuleCreateInfo createInfo{.codeSize = code.size() * sizeof(char),
                                               .pCode    = reinterpret_cast<const uint32_t *>(code.data())};
         vk::raii::ShaderModule     shaderModule{device, createInfo};
@@ -746,7 +723,7 @@ class HelloTriangleApplication
 
     static uint32_t calculateMinImageCount(const vk::SurfaceCapabilitiesKHR &surfaceCapabilities)
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         auto minImageCount = std::max(3u, surfaceCapabilities.minImageCount);
         minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount)
                             ? surfaceCapabilities.maxImageCount
@@ -756,7 +733,7 @@ class HelloTriangleApplication
 
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> &availableFormats)
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         // TODO: switch to ranges any_of ???
         for (const auto &availableFormat : availableFormats)
         {
@@ -771,7 +748,7 @@ class HelloTriangleApplication
 
     vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR> &availablePresentModes)
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         // TODO: switch to ranges any_of ???
         for (const auto &availablePresentMode : availablePresentModes)
         {
@@ -785,7 +762,7 @@ class HelloTriangleApplication
 
     vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR &capabilities)
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
         {
             return capabilities.currentExtent;
@@ -806,7 +783,7 @@ class HelloTriangleApplication
 
     std::vector<const char *> getRequiredExtensions()
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         uint32_t sdlExtensionCount = 0;
         // return in Windows
         // - sdlExtensions[0] = VK_KHR_surface
@@ -827,16 +804,20 @@ class HelloTriangleApplication
     {
         if (severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eError ||
             severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)
-            std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage
-                      << std::endl
-                      << std::endl;
+        {
+            std::string message = std::format("validation layer: type {} msg: {}\n\n",
+                                              to_string(type),
+                                              pCallbackData->pMessage);
+            std::cerr << message;
+            TracyMessage(message.c_str(), message.size());
+        }
 
         return vk::False;
     }
 
     bool isDeviceSuitable(vk::raii::PhysicalDevice physicalDevice)
     {
-        DEBUG_FUNCTION_LOG();
+        ZoneScoped;
         auto deviceProperties = physicalDevice.getProperties();
         auto deviceFeatures   = physicalDevice.getFeatures();
 
