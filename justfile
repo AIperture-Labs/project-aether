@@ -26,3 +26,6 @@ clang-tidy:
     clang-tidy -p out/build/ src/*.cpp
 
 static-analyzers: cppcheck clang-tidy
+
+tracy:
+    ./tools/tracy/tracy-profiler
