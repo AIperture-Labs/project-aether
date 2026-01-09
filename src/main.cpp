@@ -744,7 +744,7 @@ class HelloTriangleApplication
                                           .commandBufferCount   = 1,
                                           .pCommandBuffers      = &*commandBuffers[frameIndex],
                                           .signalSemaphoreCount = 1,
-                                          .pSignalSemaphores    = &*renderFinishedSemaphores[frameIndex]};
+                                          .pSignalSemaphores    = &*renderFinishedSemaphores[imageIndex]};
         queue.submit(submitInfo, *inFlightFences[frameIndex]);
 
         try
