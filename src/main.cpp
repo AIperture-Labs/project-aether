@@ -24,7 +24,6 @@ import vulkan_hpp;
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 
-
 #if defined(__clang__) || defined(__GNUC__)
 #define TracyFunction __PRETTY_FUNCTION__
 #elif defined(_MSC_VER)
@@ -110,6 +109,9 @@ class HelloTriangleApplication
     vk::raii::PipelineLayout pipelineLayout   = nullptr;
     vk::raii::Pipeline       graphicsPipeline = nullptr;
 
+    vk::raii::Buffer       vertexBuffer       = nullptr;
+    vk::raii::DeviceMemory vertexBufferMemory = nullptr;
+
     vk::raii::CommandPool                commandPool = nullptr;
     std::vector<vk::raii::CommandBuffer> commandBuffers;
 
@@ -150,6 +152,7 @@ class HelloTriangleApplication
         createImagesViews();
         createGraphicsPipeline();
         createCommandPool();
+        createVertexBuffer();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -564,6 +567,39 @@ class HelloTriangleApplication
         commandPool = vk::raii::CommandPool(device, poolInfo);
     }
 
+    void createVertexBuffer()
+    {
+        vk::BufferCreateInfo bufferInfo{.size        = sizeof(vertices[0]) * vertices.size(),
+                                        .usage       = vk::BufferUsageFlagBits::eVertexBuffer,
+                                        .sharingMode = vk::SharingMode::eExclusive};
+        vertexBuffer                           = vk::raii::Buffer(device, bufferInfo);
+        vk::MemoryRequirements memRequirements = vertexBuffer.getMemoryRequirements();
+        vk::MemoryAllocateInfo memoryAllocateInfo{
+            .allocationSize = memRequirements.size,
+            .memoryTypeIndex =
+                findMemoryType(memRequirements.memoryTypeBits,
+                               vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)};
+        vertexBufferMemory = vk::raii::DeviceMemory(device, memoryAllocateInfo);
+        vertexBuffer.bindMemory(*vertexBufferMemory, 0);
+
+        void *data = vertexBufferMemory.mapMemory(0, bufferInfo.size);
+        memcpy(data, vertices.data(), bufferInfo.size);
+        vertexBufferMemory.unmapMemory();
+    }
+
+    uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties)
+    {
+        vk::PhysicalDeviceMemoryProperties memProperties = physicalDevice.getMemoryProperties();
+
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+                return i;
+        }
+
+        throw std::runtime_error("failed to find suitable mamery type!");
+    }
+
     void createCommandBuffers()
     {
         ZoneScoped;
@@ -610,6 +646,7 @@ class HelloTriangleApplication
                                                0.0f,
                                                1.0f));
         commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
+        commandBuffer.bindVertexBuffers(0, *vertexBuffer, {0});
         commandBuffer.draw(3, 1, 0, 0);
         commandBuffer.endRendering();
 
@@ -835,9 +872,8 @@ class HelloTriangleApplication
         if (severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eError ||
             severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)
         {
-            std::string message = std::format("validation layer: type {} msg: {}\n\n",
-                                              to_string(type),
-                                              pCallbackData->pMessage);
+            std::string message =
+                std::format("validation layer: type {} msg: {}\n\n", to_string(type), pCallbackData->pMessage);
             std::cerr << message;
             TracyMessage(message.c_str(), message.size());
         }
