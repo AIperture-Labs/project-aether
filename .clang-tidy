@@ -7,11 +7,12 @@
 
 ---
 Checks: >
-  modernize-*
+  modernize-*,
+  cppcoreguidelines-*
 WarningsAsErrors: false
-HeaderFilterRegex: '^(.*/src/|.*/include/mon_projet/)'
-FormatStyle:  Google
+HeaderFilterRegex: "^(.*/src/|.*/include/mon_projet/)"
+FormatStyle: Google
 AnalyzeTemporaryDtors: false
 CheckOptions:
   - key: modernize-use-trailing-return-type
-    value: '0'
+    value: "0"
