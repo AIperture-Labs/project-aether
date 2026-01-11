@@ -569,22 +569,59 @@ class HelloTriangleApplication
 
     void createVertexBuffer()
     {
-        vk::BufferCreateInfo bufferInfo{.size        = sizeof(vertices[0]) * vertices.size(),
-                                        .usage       = vk::BufferUsageFlagBits::eVertexBuffer,
-                                        .sharingMode = vk::SharingMode::eExclusive};
-        vertexBuffer                           = vk::raii::Buffer(device, bufferInfo);
+        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+
+        vk::BufferCreateInfo   stagingInfo{.size        = bufferSize,
+                                           .usage       = vk::BufferUsageFlagBits::eTransferSrc,
+                                           .sharingMode = vk::SharingMode::eExclusive};
+        vk::raii::Buffer       stagingBuffer(device, stagingInfo);
+        vk::MemoryRequirements memRequirementsStaging = stagingBuffer.getMemoryRequirements();
+        vk::MemoryAllocateInfo memoryAllocateInfoStaging{
+            .allocationSize = memRequirementsStaging.size,
+            .memoryTypeIndex =
+                findMemoryType(memRequirementsStaging.memoryTypeBits,
+                               vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)};
+        vk::raii::DeviceMemory stagingBufferMemory(device, memoryAllocateInfoStaging);
+
+        stagingBuffer.bindMemory(stagingBufferMemory, 0);
+        void *dataStaging = stagingBufferMemory.mapMemory(0, stagingInfo.size);
+        memcpy(dataStaging, vertices.data(), stagingInfo.size);
+        stagingBufferMemory.unmapMemory();
+
+        vk::BufferCreateInfo bufferInfo{
+            .size        = bufferSize,
+            .usage       = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst,
+            .sharingMode = vk::SharingMode::eExclusive};
+        vertexBuffer = vk::raii::Buffer(device, bufferInfo);
+
         vk::MemoryRequirements memRequirements = vertexBuffer.getMemoryRequirements();
         vk::MemoryAllocateInfo memoryAllocateInfo{
             .allocationSize = memRequirements.size,
             .memoryTypeIndex =
-                findMemoryType(memRequirements.memoryTypeBits,
-                               vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)};
+                findMemoryType(memRequirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal)};
         vertexBufferMemory = vk::raii::DeviceMemory(device, memoryAllocateInfo);
+
         vertexBuffer.bindMemory(*vertexBufferMemory, 0);
 
-        void *data = vertexBufferMemory.mapMemory(0, bufferInfo.size);
-        memcpy(data, vertices.data(), bufferInfo.size);
-        vertexBufferMemory.unmapMemory();
+        copyBuffer(stagingBuffer, vertexBuffer, stagingInfo.size);
+    }
+
+    void copyBuffer(vk::raii::Buffer &srcBuffer, vk::raii::Buffer &dstBuffer, vk::DeviceSize size)
+    {
+        vk::CommandBufferAllocateInfo allocInfo{.commandPool        = commandPool,
+                                                .level              = vk::CommandBufferLevel::ePrimary,
+                                                .commandBufferCount = 1};
+        // Allocate a temporary command buffer for the one-time transfer operation from staging buffer (CPU-accessible)
+        // to the final vertex buffer (GPU-local). This buffer is temporary and will be automatically destroyed
+        // after the copy operation completes. Unlike the persistent command buffers used for rendering,
+        // this buffer is created and used exclusively for data staging and is not reused.
+        vk::raii::CommandBuffer commandCopyBuffer = std::move(device.allocateCommandBuffers(allocInfo).front());
+
+        commandCopyBuffer.begin(vk::CommandBufferBeginInfo{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit});
+        commandCopyBuffer.copyBuffer(srcBuffer, dstBuffer, vk::BufferCopy(0, 0, size));
+        commandCopyBuffer.end();
+        queue.submit(vk::SubmitInfo{.commandBufferCount=1, .pCommandBuffers= &*commandCopyBuffer}, nullptr);
+        queue.waitIdle();
     }
 
     uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties)
