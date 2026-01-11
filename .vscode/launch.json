@@ -15,7 +15,7 @@
     ],
     "configurations": [
         {
-            "name": "(Windows) Debug Target",
+            "name": "(cppvsdbg) Debug Target",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
@@ -40,7 +40,7 @@
             "preLaunchTask": "CMake: build"
         },
         {
-            "name": "(Windows) Debug Target and Tracy",
+            "name": "(cppvsdbg) Debug Target and Tracy",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
