@@ -20,6 +20,10 @@
 
 - [Blog Moonside Games](https://moonside.games/)
 
+- [Sascha Willems GitHub](https://github.com/SaschaWillems)
+- [Vulkan-Hpp RAII Programming Guide](https://github.com/KhronosGroup/Vulkan-Hpp/blob/main/vk_raii_ProgrammingGuide.md)
+- [Vulkan Base Features Proposal](https://docs.vulkan.org/features/latest/features/proposals/VulkanBase.html)
+- [Vulkan Guide](https://vkguide.dev/)
 - [Tracy Profiler](https://github.com/wolfpld/tracy)
 - [YouTube - An Introduction to Tracy Profiler in C++ - Marcos Slomp - CppCon 2023 ](https://www.youtube.com/watch?v=ghXk3Bk5F2U&t=37s)
 
