@@ -330,8 +330,6 @@ class HelloTriangleApplication
                 return static_cast<bool>(qfp.queueFlags & vk::QueueFlagBits::eGraphics);
             });
 
-            });
-
             // Check if all required device extensions are available
             auto availableDeviceExtensions     = device.enumerateDeviceExtensionProperties();
             bool supportsAllRequiredExtensions = std::ranges::all_of(
