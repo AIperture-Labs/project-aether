@@ -29,3 +29,6 @@ static-analyzers: cppcheck clang-tidy
 
 tracy:
     ./tools/tracy/tracy-profiler
+
+aider:
+    aider --model ollama_chat/devstral-small-2:24b --watch-files --dark-mode

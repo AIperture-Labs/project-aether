@@ -67,3 +67,4 @@ out/
 
 # Tracy
 tools/tracy
+.aider*
