@@ -23,6 +23,9 @@
 - [Vulkan Base Features Proposal](https://docs.vulkan.org/features/latest/features/proposals/VulkanBase.html)
 - [Vulkan Guide](https://vkguide.dev/)
 - [NVIDIA Vulkan Memory Management](https://developer.nvidia.com/vulkan-memory-management)
+    - [What is the Base Address Register (BAR) in PCIe? — Stack Overflow](https://stackoverflow.com/questions/30190050/what-is-the-base-address-register-bar-in-pcie)
+    - [GPUOpen: Get the Most Out of Smart Access Memory](https://gpuopen.com/learn/get-the-most-out-of-smart-access-memory/)
+    - [GPUmag: Smart Access Memory](https://www.gpumag.com/smart-access-memory/)
 
 ## Tutorials & Learning
 - [Official Khronos Vulkan Tutorial](https://docs.vulkan.org/tutorial/latest/)
