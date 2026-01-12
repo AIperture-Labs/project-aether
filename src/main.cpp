@@ -72,9 +72,9 @@ const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
 struct UniformBufferObject
 {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
 }; /**
     * @class SDLException
     * @brief Exception class for SDL-related errors.
@@ -132,6 +132,9 @@ class HelloTriangleApplication
     std::vector<vk::raii::DeviceMemory> uniformBuffersMemory;
     std::vector<void *>                 uniformBuffersMapped;
 
+    vk::raii::DescriptorPool             descriptorPool = nullptr;
+    std::vector<vk::raii::DescriptorSet> descriptorSets;
+
     vk::raii::CommandPool                commandPool = nullptr;
     std::vector<vk::raii::CommandBuffer> commandBuffers;
 
@@ -176,6 +179,8 @@ class HelloTriangleApplication
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
+        createDescriptorPool();
+        createDescriptorSets();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -556,7 +561,7 @@ class HelloTriangleApplication
                                                             .rasterizerDiscardEnable = vk::False,
                                                             .polygonMode             = vk::PolygonMode::eFill,
                                                             .cullMode                = vk::CullModeFlagBits::eBack,
-                                                            .frontFace               = vk::FrontFace::eClockwise,
+                                                            .frontFace               = vk::FrontFace::eCounterClockwise,
                                                             .depthBiasEnable         = vk::False,
                                                             .depthBiasSlopeFactor    = 1.0f,
                                                             .lineWidth               = 1.0f};
@@ -696,6 +701,41 @@ class HelloTriangleApplication
         }
     }
 
+    void createDescriptorPool()
+    {
+        vk::DescriptorPoolSize       poolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT);
+        vk::DescriptorPoolCreateInfo poolInfo{.flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+                                              .maxSets       = MAX_FRAMES_IN_FLIGHT,
+                                              .poolSizeCount = 1,
+                                              .pPoolSizes    = &poolSize};
+        descriptorPool = vk::raii::DescriptorPool(device, poolInfo);
+    }
+
+    void createDescriptorSets()
+    {
+        std::vector<vk::DescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, *descriptorSetLayout);
+        vk::DescriptorSetAllocateInfo        allocInfo{.descriptorPool     = descriptorPool,
+                                                       .descriptorSetCount = static_cast<uint32_t>(layouts.size()),
+                                                       .pSetLayouts        = layouts.data()};
+
+        descriptorSets.clear();
+        descriptorSets = device.allocateDescriptorSets(allocInfo);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            vk::DescriptorBufferInfo bufferInfo{.buffer = uniformBuffers[i],
+                                                .offset = 0,
+                                                .range  = sizeof(UniformBufferObject)};
+            vk::WriteDescriptorSet   descriptorWrite{.dstSet          = descriptorSets[i],
+                                                     .dstBinding      = 0,
+                                                     .dstArrayElement = 0,
+                                                     .descriptorCount = 1,
+                                                     .descriptorType  = vk::DescriptorType::eUniformBuffer,
+                                                     .pBufferInfo     = &bufferInfo};
+            device.updateDescriptorSets(descriptorWrite, {});
+        }
+    }
+
     void copyBuffer(vk::raii::Buffer &srcBuffer, vk::raii::Buffer &dstBuffer, vk::DeviceSize size)
     {
         vk::CommandBufferAllocateInfo allocInfo{.commandPool        = commandPool,
@@ -790,6 +830,11 @@ class HelloTriangleApplication
         commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
         commandBuffer.bindVertexBuffers(0, *vertexBuffer, {0});
         commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexTypeValue<decltype(indices)::value_type>::value);
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                         pipelineLayout,
+                                         0,
+                                         *descriptorSets[frameIndex],
+                                         nullptr);
         commandBuffer.drawIndexed(indices.size(), 1, 0, 0, 0);
         commandBuffer.endRendering();
 
