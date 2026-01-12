@@ -4,6 +4,7 @@
 // main.cpp
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -18,8 +19,12 @@
 #else
 import vulkan_hpp;
 #endif
+
 // Maths
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 // SDL headers
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
@@ -65,13 +70,18 @@ const std::vector<Vertex> vertices = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
 
 const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
-/**
- * @class SDLException
- * @brief Exception class for SDL-related errors.
- *
- * This exception is thrown when an SDL function fails. It appends the SDL error message
- * (from SDL_GetError()) to the provided message.
- */
+struct UniformBufferObject
+{
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
+}; /**
+    * @class SDLException
+    * @brief Exception class for SDL-related errors.
+    *
+    * This exception is thrown when an SDL function fails. It appends the SDL error message
+    * (from SDL_GetError()) to the provided message.
+    */
 class SDLException : public std::runtime_error
 {
    public:
@@ -109,13 +119,18 @@ class HelloTriangleApplication
     vk::Extent2D                     swapChainExtent;
     std::vector<vk::raii::ImageView> swapChainImageViews;
 
-    vk::raii::PipelineLayout pipelineLayout   = nullptr;
-    vk::raii::Pipeline       graphicsPipeline = nullptr;
+    vk::raii::DescriptorSetLayout descriptorSetLayout = nullptr;
+    vk::raii::PipelineLayout      pipelineLayout      = nullptr;
+    vk::raii::Pipeline            graphicsPipeline    = nullptr;
 
     vk::raii::Buffer       vertexBuffer       = nullptr;
     vk::raii::DeviceMemory vertexBufferMemory = nullptr;
     vk::raii::Buffer       indexBuffer        = nullptr;
     vk::raii::DeviceMemory indexBufferMemory  = nullptr;
+
+    std::vector<vk::raii::Buffer>       uniformBuffers;
+    std::vector<vk::raii::DeviceMemory> uniformBuffersMemory;
+    std::vector<void *>                 uniformBuffersMapped;
 
     vk::raii::CommandPool                commandPool = nullptr;
     std::vector<vk::raii::CommandBuffer> commandBuffers;
@@ -155,10 +170,12 @@ class HelloTriangleApplication
         createLogicalDevice();
         createSwapChain();
         createImagesViews();
+        createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
         createVertexBuffer();
         createIndexBuffer();
+        createUniformBuffers();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -384,7 +401,7 @@ class HelloTriangleApplication
         //       3. Setting resources to VK_SHARING_MODE_CONCURRENT
         //       4. Submitting transfer commands to the transfer queue instead of graphics queue
         //       This is more complex but can improve performance for large transfers
-        
+
         // find the index of the first queue family that supports graphics
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
 
@@ -495,6 +512,17 @@ class HelloTriangleApplication
         }
     }
 
+    void createDescriptorSetLayout()
+    {
+        vk::DescriptorSetLayoutBinding    uboLayoutBinding(0,
+                                                        vk::DescriptorType::eUniformBuffer,
+                                                        1,
+                                                        vk::ShaderStageFlagBits::eVertex,
+                                                        nullptr);
+        vk::DescriptorSetLayoutCreateInfo layoutInfo{.bindingCount = 1, .pBindings = &uboLayoutBinding};
+        descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo);
+    }
+
     void createGraphicsPipeline()
     {
         ZoneScoped;
@@ -552,7 +580,9 @@ class HelloTriangleApplication
             .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()),
             .pDynamicStates    = dynamicStates.data()};
 
-        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{.setLayoutCount = 0, .pushConstantRangeCount = 0};
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{.setLayoutCount         = 1,
+                                                        .pSetLayouts            = &*descriptorSetLayout,
+                                                        .pushConstantRangeCount = 0};
         pipelineLayout = vk::raii::PipelineLayout(device, pipelineLayoutInfo);
 
         vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfo> pipelineCreateInfoChain = {
@@ -587,9 +617,15 @@ class HelloTriangleApplication
         //       and memory efficiency. This follows Vulkan best practices where multiple buffers are stored
         //       in a single VkBuffer with offsets, making data more cache-friendly and potentially
         //       allowing memory reuse through aliasing when resources aren't used simultaneously.
-        //       See: https://vulkan.lunarg.com/doc/sdk/1.3.280.0/windows/html/vkspec.html#VUID-vkCmdBindVertexBuffers-pVertexBuffers-0x20
+        //       See:
+        //       https://vulkan.lunarg.com/doc/sdk/1.3.280.0/windows/html/vkspec.html#VUID-vkCmdBindVertexBuffers-pVertexBuffers-0x20
         vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
+        // XXX: Staging buffers are used here to copy data from host-visible memory
+        // to device-local memory because many GPUs historically couldn't access
+        // system memory directly. On systems with Resizable BAR / Smart Access Memory
+        // or UMA, explicit staging may be unnecessary or suboptimal. See discussion:
+        // https://www.reddit.com/r/vulkan/comments/1qad9io/continuing_with_the_official_tutorial/
         // Create staging buffer using createBuffer helper
         vk::raii::Buffer       stagingBuffer({});
         vk::raii::DeviceMemory stagingBufferMemory({});
@@ -638,6 +674,28 @@ class HelloTriangleApplication
         copyBuffer(stagingBuffer, indexBuffer, bufferSize);
     }
 
+    void createUniformBuffers()
+    {
+        uniformBuffers.clear();
+        uniformBuffersMemory.clear();
+        uniformBuffersMapped.clear();
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            vk::DeviceSize         bufferSize = sizeof(UniformBufferObject);
+            vk::raii::Buffer       buffer({});
+            vk::raii::DeviceMemory bufferMem({});
+            createBuffer(bufferSize,
+                         vk::BufferUsageFlagBits::eUniformBuffer,
+                         vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                         buffer,
+                         bufferMem);
+            uniformBuffers.emplace_back(std::move(buffer));
+            uniformBuffersMemory.emplace_back(std::move(bufferMem));
+            uniformBuffersMapped.emplace_back(uniformBuffersMemory[i].mapMemory(0, bufferSize));
+        }
+    }
+
     void copyBuffer(vk::raii::Buffer &srcBuffer, vk::raii::Buffer &dstBuffer, vk::DeviceSize size)
     {
         vk::CommandBufferAllocateInfo allocInfo{.commandPool        = commandPool,
@@ -681,7 +739,7 @@ class HelloTriangleApplication
                 return i;
         }
 
-        throw std::runtime_error("failed to find suitable mamery type!");
+        throw std::runtime_error("failed to find suitable memory type!");
     }
 
     void createCommandBuffers()
@@ -731,7 +789,7 @@ class HelloTriangleApplication
                                                1.0f));
         commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
         commandBuffer.bindVertexBuffers(0, *vertexBuffer, {0});
-        commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint16);
+        commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexTypeValue<decltype(indices)::value_type>::value);
         commandBuffer.drawIndexed(indices.size(), 1, 0, 0, 0);
         commandBuffer.endRendering();
 
@@ -794,6 +852,29 @@ class HelloTriangleApplication
         }
     }
 
+    void updateUniformBuffer(uint32_t currentImage)
+    {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto  currentTime = std::chrono::high_resolution_clock::now();
+        float time        = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+        UniformBufferObject ubo{};
+        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.view  = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        ubo.proj =
+            glm::perspective(glm::radians(45.0f),
+                             static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height),
+                             0.1f,
+                             10.0f);
+        // GLM was originally designed for OpenGL, where the Y coordinate of the clip
+        // coordinates is inverted. Flip the sign on the Y-axis scaling factor in the
+        // projection matrix so the final image isn't rendered upside down.
+        ubo.proj[1][1] *= -1;
+
+        memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+    }
+
     void drawFrame()
     {
         ZoneScoped;
@@ -817,6 +898,7 @@ class HelloTriangleApplication
         {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
+        updateUniformBuffer(frameIndex);
 
         device.resetFences(*inFlightFences[frameIndex]);
         commandBuffers[frameIndex].reset();
