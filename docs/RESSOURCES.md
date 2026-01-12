@@ -1,30 +1,34 @@
-#  Ressources List
+# Resources List
 
+## IDE & Editor
 - [Vulkan IDE settings guide](https://docs.vulkan.org/guide/latest/ide.html)
 - [VsCode clang-tidy](https://devblogs.microsoft.com/cppblog/visual-studio-code-c-december-2021-update-clang-tidy/)
-- [CMake Introduction](https://cliutils.gitlab.io/modern-cmake/chapters/features/small.html)
-- [CMake example projet - box2d-lite](https://github.com/esweet431/box2d-lite)
 - [VsCode CMake Tools extension doc](https://github.com/microsoft/vscode-cmake-tools/blob/HEAD/docs/README.md)
+- [CMake Introduction](https://cliutils.gitlab.io/modern-cmake/chapters/features/small.html)
+- [CMake example project - box2d-lite](https://github.com/esweet431/box2d-lite)
+- [CMakeLists.txt from Vulkan tutorial](https://github.com/KhronosGroup/Vulkan-Tutorial/blob/main/attachments/CMakeLists.txt)
+- [VSCode CMake extension documentation](https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/README.md)
+
+## Build & Analysis Tools
 - [Clang-format example from Blender](https://github.com/blender/blender/blob/main/.clang-format)
 - [Clang-tidy example from Blender](https://github.com/blender/blender/blob/main/.clang-tidy)
-
-- [CMakeLists.txt from Vulkan tutorial](https://github.com/KhronosGroup/Vulkan-Tutorial/blob/main/attachments/CMakeLists.txt)
-- [Zyger video presents here Engine Vulakn Project in Youtube](https://www.youtube.com/watch?v=omsidK31A5w)
-- [Official Khronos Vulkan Tutorial](https://docs.vulkan.org/tutorial/latest/)
-- [VSCode CMake extension documentation](https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/README.md)
 - [CPPcheck website](https://cppcheck.sourceforge.io/)
+
+## SDK & Libraries
 - [Vulkan SDK Website](https://vulkan.lunarg.com/)
-
-- [SDL3 Exhaustive examples](https://github.com/Ravbug/sdl3-sample)
-- [SDL3 Vulkan Documentation Section][https://wiki.libsdl.org/SDL3/CategoryVulkan]
-
-- [Blog Moonside Games](https://moonside.games/)
-
-- [Sascha Willems GitHub](https://github.com/SaschaWillems)
 - [Vulkan-Hpp RAII Programming Guide](https://github.com/KhronosGroup/Vulkan-Hpp/blob/main/vk_raii_ProgrammingGuide.md)
 - [Vulkan Base Features Proposal](https://docs.vulkan.org/features/latest/features/proposals/VulkanBase.html)
 - [Vulkan Guide](https://vkguide.dev/)
-- [Tracy Profiler](https://github.com/wolfpld/tracy)
-- [YouTube - An Introduction to Tracy Profiler in C++ - Marcos Slomp - CppCon 2023 ](https://www.youtube.com/watch?v=ghXk3Bk5F2U&t=37s)
+- [NVIDIA Vulkan Memory Management](https://developer.nvidia.com/vulkan-memory-management)
 
-- [Vulkan Guide](https://vkguide.dev/)
+## Tutorials & Learning
+- [Official Khronos Vulkan Tutorial](https://docs.vulkan.org/tutorial/latest/)
+- [Zyger video presents Engine Vulkan Project (YouTube)](https://www.youtube.com/watch?v=omsidK31A5w)
+- [Sascha Willems GitHub](https://github.com/SaschaWillems)
+- [Blog Moonside Games](https://moonside.games/)
+
+## Samples & Profiling
+- [SDL3 Exhaustive examples](https://github.com/Ravbug/sdl3-sample)
+- [SDL3 Vulkan Documentation Section](https://wiki.libsdl.org/SDL3/CategoryVulkan)
+- [Tracy Profiler](https://github.com/wolfpld/tracy)
+- [YouTube: Introduction to Tracy Profiler (CppCon 2023)](https://www.youtube.com/watch?v=ghXk3Bk5F2U&t=37s)
