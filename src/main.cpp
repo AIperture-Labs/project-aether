@@ -377,6 +377,14 @@ class HelloTriangleApplication
     void createLogicalDevice()
     {
         ZoneScoped;
+        // TODO: Consider implementing a dedicated transfer queue for buffer operations
+        //       This would require:
+        //       1. Modifying queue family selection to find a queue with VK_QUEUE_TRANSFER_BIT
+        //       2. Creating a separate command pool for transfer operations
+        //       3. Setting resources to VK_SHARING_MODE_CONCURRENT
+        //       4. Submitting transfer commands to the transfer queue instead of graphics queue
+        //       This is more complex but can improve performance for large transfers
+        
         // find the index of the first queue family that supports graphics
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
 
