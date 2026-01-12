@@ -1,5 +1,8 @@
 # Resources List
 
+## Uniform Buffer Objects
+- [Khronos OpenGL Uniform Buffer Object Wiki](https://wikis.khronos.org/opengl/Uniform_Buffer_Object)
+
 ## IDE & Editor
 - [Vulkan IDE settings guide](https://docs.vulkan.org/guide/latest/ide.html)
 - [VsCode clang-tidy](https://devblogs.microsoft.com/cppblog/visual-studio-code-c-december-2021-update-clang-tidy/)
