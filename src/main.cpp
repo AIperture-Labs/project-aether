@@ -575,6 +575,11 @@ class HelloTriangleApplication
 
     void createVertexBuffer()
     {
+        // TODO: Consider combining vertex and index buffers into a single allocation for better cache locality
+        //       and memory efficiency. This follows Vulkan best practices where multiple buffers are stored
+        //       in a single VkBuffer with offsets, making data more cache-friendly and potentially
+        //       allowing memory reuse through aliasing when resources aren't used simultaneously.
+        //       See: https://vulkan.lunarg.com/doc/sdk/1.3.280.0/windows/html/vkspec.html#VUID-vkCmdBindVertexBuffers-pVertexBuffers-0x20
         vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
         // Create staging buffer using createBuffer helper
