@@ -242,6 +242,28 @@ function(add_slang_shader_target TARGET)
     add_custom_target(${TARGET} DEPENDS ${SHADERS_BINARY_DIR}/slang.spv)
 endfunction()
 
+function(add_texture_target TARGET)
+    cmake_parse_arguments("TEXTURE" "" "" "SOURCES" ${ARGN})
+
+    # Use the current source directory relative to the project source
+    file(RELATIVE_PATH RELATIVE_SOURCE_DIR
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+    # Create output directory matching source structure
+    set(TEXTURES_BINARY_DIR ${CMAKE_BINARY_DIR}/${RELATIVE_SOURCE_DIR})
+
+    list(APPEND TEXTURE_BINARIES "")
+
+    foreach(TEXTURE_SOURCE TEXTURE_SOURCES)
+        get_filename_component(TEXTURE_FILENAME "${TEXTURE_SOURCES}" NAME)
+
+        set(TEXTURE_BINARY "${TEXTURES_BINARY_DIR}/${TEXTURE_FILENAME}")
+        list(APPEND TEXTURE_BINARIES "${TEXTURE_BINARY}")
+    endforeach()
+endfunction()
+
 
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
     set(CCDB_SRC "${CMAKE_BINARY_DIR}/compile_commands.json")
