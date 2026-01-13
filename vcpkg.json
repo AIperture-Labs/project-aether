@@ -11,10 +11,11 @@
       "name": "tracy",
       "features": [
         "cli-tools",
+        "fibers",
         "gui-tools",
-        "verbose",
-        "fibers"
+        "verbose"
       ]
-    }
+    },
+    "libjpeg-turbo"
   ]
 }

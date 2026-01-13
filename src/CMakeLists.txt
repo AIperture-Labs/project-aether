@@ -11,7 +11,7 @@ endif()
 
 add_executable(Main main.cpp)
 set_target_properties(Main PROPERTIES CXX_STANDARD 20)
-target_link_libraries(Main Vulkan::cppm SDL3::SDL3)
+target_link_libraries(Main Vulkan::cppm SDL3::SDL3 libjpeg-turbo::turbojpeg)
 if(ENABLE_CPP20_MODULE)
     target_compile_definitions(Main PRIVATE USE_CPP20_MODULES=1)
 endif()

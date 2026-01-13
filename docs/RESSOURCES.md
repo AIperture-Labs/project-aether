@@ -38,3 +38,8 @@
 - [SDL3 Vulkan Documentation Section](https://wiki.libsdl.org/SDL3/CategoryVulkan)
 - [Tracy Profiler](https://github.com/wolfpld/tracy)
 - [YouTube: Introduction to Tracy Profiler (CppCon 2023)](https://www.youtube.com/watch?v=ghXk3Bk5F2U&t=37s)
+
+## Image Decoding
+- [libjpeg-turbo](https://libjpeg-turbo.org/)
+- [GitHub Repository](https://github.com/libjpeg-turbo/libjpeg-turbo)
+- [Documentation](https://libjpeg-turbo.org/Documentation/Documentation)
