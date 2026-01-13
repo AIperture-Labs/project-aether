@@ -19,25 +19,25 @@ clean-clangd:
 # Clean all build, cache and artifact files
 clean-all: clean-out clean-clangd
 
-# AI! make a comment as help message
+# Run static analysis with cppcheck
 cppcheck:
     cppcheck --project=cppcheck.cfg src/
 
-# AI! make a comment as help message
+# Run static analysis with clang-tidy
 clang-tidy:
     clang-tidy -p out/build/ src/*.cpp
 
-# AI! make a comment as help message
+# Run all static analyzers
 static-analyzers: cppcheck clang-tidy
 
-# AI! make a comment as help message
+# Launch Tracy profiler
 tracy:
     ./tools/tracy/tracy-profiler
 
-# AI! make a comment as help message
+# Install aider tool
 aider-install:
     uv tool install --force --python python3.12 --with pip aider-chat[browser,help]
 
-# AI! make a comment as help message
+# Launch aider chat
 aider:
     aider --model ollama_chat/devstral-small-2:24b --watch-files --dark-mode
