@@ -51,9 +51,31 @@
             }
         },
         {
-            "label": "Build and Tracy",
+            "label": "Launch RenderDoc GUI",
+            "type": "shell",
+            "command": "qrenderdoc",
+            "problemMatcher": [],
+            "isBackground": true,
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Build / Tracy",
             "dependsOn": [
                 "Launch Tracy GUI",
+                "CMake: build"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Build / Tracy / RenderDoc",
+            "dependsOn": [
+                "Launch Tracy GUI",
+                "Launch RenderDoc GUI",
                 "CMake: build"
             ],
             "problemMatcher": []

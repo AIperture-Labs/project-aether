@@ -40,7 +40,7 @@
             "preLaunchTask": "CMake: build"
         },
         {
-            "name": "(cppvsdbg) Debug Target and Tracy",
+            "name": "(cppvsdbg) Debug Target / Tracy",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
@@ -62,7 +62,32 @@
                 }
             ],
             "console": "integratedTerminal",
-            "preLaunchTask": "Build and Tracy"
+            "preLaunchTask": "Build / Tracy"
+        },
+        {
+            "name": "(cppvsdbg) Debug Target / Tracy / RenderDoc",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "renderdoccmd",
+            "args": [ "capture","${command:cmake.launchTargetPath}" ],
+            "stopAtEntry": false,
+            "cwd": "${command:cmake.getLaunchTargetDirectory}",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+                },
+                {
+                    "name": "VK_LAYER_PATH",
+                    "value": "${env:VULKAN_SDK}/Bin"
+                },
+                {
+                    "name": "VK_INSTANCE_LAYERS",
+                    "value": "VK_LAYER_KHRONOS_validation"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build / Tracy / RenderDoc"
         },
         {
             "name": "(LLDB) Debug Target",
