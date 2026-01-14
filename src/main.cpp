@@ -12,6 +12,7 @@
 #include <iostream>
 #include <limits>
 #include <stdexcept>
+#include <variant>
 #include <vector>
 
 #if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULE)
@@ -35,6 +36,13 @@ import vulkan_hpp;
 #define TracyFunction __FUNCSIG__
 #endif
 #include <tracy/Tracy.hpp>
+
+// TurboJpeg
+// FIXME
+// #if defined(__clang__) || defined(__GNUC__)
+// #define _CRT_SECURE_NO_WARNINGS
+// #endif
+#include <turbojpeg.h>
 
 const std::vector<char const *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -60,6 +68,156 @@ struct Vertex
     {
         return {vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, pos)),
                 vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, color))};
+    }
+};
+
+// Get inspiration from :
+//   - Epic UnrealEngine:
+//   https://github.com/EpicGames/UnrealEngine/tree/684b4c133ed87e8050d1fdaa287242f0fe2c1153/Engine/Source/Runtime/ImageWrapper
+class ImageJpeg
+{
+    // Members
+   public:
+    static constexpr int32_t DATA_PRECISION_8_BITS  = 8;
+    static constexpr int32_t DATA_PRECISION_12_BITS = 12;
+    static constexpr int32_t DATA_PRECISION_16_BITS = 16;
+
+   private:
+    tjhandle                   handle;
+    const std::string          filename;
+    const std::vector<uint8_t> jpegBuf;
+    // TODO: later make globals types
+    using jpeg_sample_8_t  = uint8_t;
+    using jpeg_sample_12_t = int16_t;
+    using jpeg_sample_16_t = uint16_t;
+    using jpeg_buf_8_t     = std::vector<jpeg_sample_8_t>;
+    using jpeg_buf_12_t    = std::vector<jpeg_sample_12_t>;
+    using jpeg_buf_16_t    = std::vector<jpeg_sample_16_t>;
+    using jpeg_raw_buf_t   = std::variant<jpeg_buf_8_t, jpeg_buf_12_t, jpeg_buf_16_t>;
+    jpeg_raw_buf_t rawBuffer;
+    const TJPF     pixelFormat;
+
+    // Methods
+   public:
+    ImageJpeg(const std::string &filename, TJPF pixelFormat = TJPF_RGBA) :
+        handle(tj3Init(TJINIT_DECOMPRESS)), filename(filename), jpegBuf(readJpeg(filename)), pixelFormat(pixelFormat)
+    {
+        if (handle == nullptr)
+        {
+            throw std::runtime_error(std::string("Failed to initialize TurboJPEG context : ") + tj3GetErrorStr(handle));
+        }
+        if (tj3DecompressHeader(handle, jpegBuf.data(), getJpegSize()) != 0)
+        {
+            throw std::runtime_error(std::string("Failed to decompress JPEG header: ") + tj3GetErrorStr(handle));
+        }
+        if (decompress() != 0)
+        {
+            throw std::runtime_error(std::string("Failed to decompress JPEG: ") + tj3GetErrorStr(handle));
+        }
+    }
+
+    // Jpeg(Jpeg &&) = default;
+    // Jpeg(const Jpeg &) = default;
+    // Jpeg &operator=(Jpeg &&) = default;
+    // Jpeg &operator=(const Jpeg &) = default;
+
+    ~ImageJpeg(void)
+    {
+        tj3Destroy(handle);
+    }
+
+    inline int32_t getDataPrecision() const
+    {
+        return tj3Get(handle, TJPARAM_PRECISION);
+    }
+
+    inline size_t getJpegSize() const
+    {
+        return jpegBuf.size();
+    }
+
+    inline size_t getWidth() const
+    {
+        return tj3Get(handle, TJPARAM_JPEGWIDTH);
+    }
+
+    inline size_t getHeight() const
+    {
+        return tj3Get(handle, TJPARAM_JPEGHEIGHT);
+    }
+
+    inline size_t getPixelSize() const
+    {
+        return tjPixelSize[pixelFormat];
+    }
+
+    inline const void *getData() const
+    {
+        return std::visit([](auto const &_buf) -> const void * { return _buf.data(); }, rawBuffer);
+    }
+
+    inline size_t getSize() const
+    {
+        return getWidth() * getHeight() * getPixelSize();
+    }
+
+    int32_t decompress()
+    {
+        if (getDataPrecision() == DATA_PRECISION_8_BITS)
+        {
+            auto &_buf = std::get<jpeg_buf_8_t>(rawBuffer);
+            _buf.resize(getSize());
+            return tj3Decompress8(handle,
+                                  jpegBuf.data(),
+                                  getSize(),
+                                  _buf.data(),
+                                  getWidth() * getPixelSize(),
+                                  pixelFormat);
+        }
+        else if (getDataPrecision() == DATA_PRECISION_12_BITS)
+        {
+            auto &_buf = std::get<jpeg_buf_12_t>(rawBuffer);
+            _buf.resize(getSize());
+            return tj3Decompress12(handle,
+                                   jpegBuf.data(),
+                                   getSize(),
+                                   _buf.data(),
+                                   getWidth() * getPixelSize(),
+                                   pixelFormat);
+        }
+        else if (getDataPrecision() == DATA_PRECISION_8_BITS)
+        {
+            auto &_buf = std::get<jpeg_buf_16_t>(rawBuffer);
+            _buf.resize(getSize());
+            return tj3Decompress16(handle,
+                                   jpegBuf.data(),
+                                   getSize(),
+                                   _buf.data(),
+                                   getWidth() * getPixelSize(),
+                                   pixelFormat);
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
+   private:
+    static std::vector<uint8_t> readJpeg(const std::string &filename)
+    {
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+        if (!file.is_open())
+        {
+            throw std::runtime_error("failed to open file!");
+        }
+
+        std::vector<char> buffer(file.tellg());
+        file.seekg(0, std::ios::beg);
+        file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+        file.close();
+
+        return std::vector<uint8_t>(buffer.begin(), buffer.end());
     }
 };
 
