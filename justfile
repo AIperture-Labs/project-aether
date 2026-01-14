@@ -36,7 +36,7 @@ tracy:
 
 # Install aider tool
 aider-install:
-    uv tool install --force --python python3.12 --with pip aider-chat[browser,help]
+    uv tool install --force --python python3.12 --with pip aider-chat[browser,help,playwright]
 
 # Launch aider chat
 aider:
