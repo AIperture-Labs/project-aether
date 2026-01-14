@@ -105,7 +105,7 @@
             "preLaunchTask": "CMake: build"
         },
         {
-            "name": "(LLDB) Debug Target and Tracy",
+            "name": "(LLDB) Debug Target / Tracy",
             "type": "lldb",
             "request": "launch",
             "program": "${command:cmake.launchTargetPath}",
@@ -117,7 +117,22 @@
                 "VK_INSTANCE_LAYERS": "VK_LAYER_KHRONOS_validation"
             },
             "console": "integratedTerminal",
-            "preLaunchTask": "Build and Tracy"
+            "preLaunchTask": "Build / Tracy"
+        },
+        {
+            "name": "(LLDB) Debug Target / Tracy / RenderDoc",
+            "type": "lldb",
+            "request": "launch",
+            "program": "renderdoccmd",
+            "args": [ "capture","${command:cmake.launchTargetPath}" ],
+            "cwd": "${command:cmake.getLaunchTargetDirectory}",
+            "env": {
+                "PATH":"${env:PATH}:${command:cmake.getLaunchTargetDirectory}",
+                "VK_LAYER_PATH":"${env:VULKAN_SDK}/Bin",
+                "VK_INSTANCE_LAYERS": "VK_LAYER_KHRONOS_validation"
+            },
+            "console": "integratedTerminal",
+            "preLaunchTask": "Build / Tracy / RenderDoc"
         },
         // {
         //     "name": "(Windows) Launch Vulkan Shaders",
