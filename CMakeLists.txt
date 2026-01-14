@@ -105,6 +105,7 @@ endif()
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(SDL3 CONFIG REQUIRED)
+# find_package(JPEG REQUIRED) if I'm using the legacy libjpeg low level api
 find_package(libjpeg-turbo CONFIG REQUIRED)
 if(TRACY_ENABLE)
     find_package(Tracy CONFIG REQUIRED)
@@ -256,12 +257,23 @@ function(add_texture_target TARGET)
 
     list(APPEND TEXTURE_BINARIES "")
 
-    foreach(TEXTURE_SOURCE TEXTURE_SOURCES)
-        get_filename_component(TEXTURE_FILENAME "${TEXTURE_SOURCES}" NAME)
-
+    foreach(TEXTURE_SOURCE ${TEXTURE_SOURCES})
+        get_filename_component(TEXTURE_FILENAME "${TEXTURE_SOURCE}" NAME)
         set(TEXTURE_BINARY "${TEXTURES_BINARY_DIR}/${TEXTURE_FILENAME}")
         list(APPEND TEXTURE_BINARIES "${TEXTURE_BINARY}")
+        add_custom_command(
+            OUTPUT ${TEXTURE_BINARY}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${TEXTURES_BINARY_DIR}
+            # FIXME: CMAKE_SOURCE_DIR is not the best way to path the asset
+            # COMMAND ${CMAKE_COMMAND} -E create_symlink "${TEXTURE_SOURCE}" ${TEXTURE_BINARY}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${TEXTURE_SOURCE}" "${TEXTURE_BINARY}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            DEPENDS ${TEXTURE_SOURCE}
+            COMMENT "Symlink ${TEXTURE_SOURCE} to ${TEXTURE_BINARY}"
+            VERBATIM
+        )
     endforeach()
+    add_custom_target(${TARGET} ALL DEPENDS ${TEXTURE_BINARIES})
 endfunction()
 
 
