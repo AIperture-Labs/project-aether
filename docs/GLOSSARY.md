@@ -32,6 +32,10 @@ A technology that extends BAR by providing the GPU with direct access to a large
 
 Texel (Texture Element) is the smallest unit of a texture map, analogous to a pixel in an image but representing a value in texture space. Texels are sampled by the GPU during texture mapping to determine the color or data applied to a fragment or vertex. The arrangement and filtering of texels affect the visual quality and detail of textured surfaces in 3D graphics.
 
+## Heightmap
+
+A heightmap is a 2D image (typically grayscale) used to represent elevation data for terrain. Each pixel's intensity encodes height, which can be used to displace vertices, generate normals, or sample terrain heights in shaders and geometry creation. Heightmaps are commonly used for terrain rendering, collision detection, and procedural terrain generation.
+
 ## UMA (Unified Memory Architecture)
 
 Unified Memory Architecture is a design where the CPU and GPU share the same pool of memory. This simplifies data transfer and can improve performance by allowing both processors to access the same memory space without explicit copies.

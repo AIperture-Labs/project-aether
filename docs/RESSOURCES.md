@@ -47,3 +47,4 @@
 ## Texture Mapping & Filtering
 - [Mipmap (Wikipedia)](https://en.wikipedia.org/wiki/Mipmap) — Overview of mipmaps, their use in texture mapping, and their impact on rendering performance and quality.
 - [Anisotropic Filtering (Wikipedia)](https://en.wikipedia.org/wiki/Anisotropic_filtering) — Explains anisotropic filtering, its benefits for texture clarity at oblique viewing angles, and how it works in graphics pipelines.
+ - [Heightmap (Wikipedia)](https://en.wikipedia.org/wiki/Heightmap) — Overview of heightmaps used to represent terrain elevation as grayscale images; commonly used for terrain rendering and procedural generation.
