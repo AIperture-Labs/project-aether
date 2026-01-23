@@ -1,3 +1,11 @@
+## Anisotropic Filtering
+
+Anisotropic filtering is a texture filtering technique used in 3D graphics to improve the clarity of textures viewed at oblique angles. It reduces blur and preserves detail by sampling textures with consideration of the viewing angle, resulting in sharper and more realistic images, especially for surfaces that recede into the distance.
+
+## Mipmap
+
+A mipmap is a sequence of precomputed, downscaled versions of a texture, each at a progressively lower resolution. Mipmaps are used in texture mapping to improve rendering performance and visual quality by selecting the most appropriate texture size based on the distance and angle of the surface being rendered. This reduces aliasing and texture shimmering artifacts.
+
 # Glossary
 
 ## Scissor (Scissor Test)

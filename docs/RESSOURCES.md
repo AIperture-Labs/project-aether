@@ -40,6 +40,10 @@
 - [YouTube: Introduction to Tracy Profiler (CppCon 2023)](https://www.youtube.com/watch?v=ghXk3Bk5F2U&t=37s)
 
 ## Image Decoding
-- [libjpeg-turbo](https://libjpeg-turbo.org/)
-- [GitHub Repository](https://github.com/libjpeg-turbo/libjpeg-turbo)
-- [Documentation](https://libjpeg-turbo.org/Documentation/Documentation)
+- [libjpeg-turbo](https://libjpeg-turbo.org/) — High-speed JPEG image codec used for efficient texture decoding and image processing.
+    - [GitHub Repository](https://github.com/libjpeg-turbo/libjpeg-turbo)
+    - [Documentation](https://libjpeg-turbo.org/Documentation/Documentation)
+
+## Texture Mapping & Filtering
+- [Mipmap (Wikipedia)](https://en.wikipedia.org/wiki/Mipmap) — Overview of mipmaps, their use in texture mapping, and their impact on rendering performance and quality.
+- [Anisotropic Filtering (Wikipedia)](https://en.wikipedia.org/wiki/Anisotropic_filtering) — Explains anisotropic filtering, its benefits for texture clarity at oblique viewing angles, and how it works in graphics pipelines.
