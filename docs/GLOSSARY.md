@@ -49,6 +49,16 @@ In Vulkan, the layout of an image describes how its data is organized and access
 
 The layout must be explicitly managed by the application, using transitions (barriers), to ensure access validity and memory coherence. It allows the GPU driver to optimize memory access according to the current usage of the image.
 
+## Descriptor (Descriptor Set)
+
+A descriptor is a structure describing a GPU resource accessible from a shader (for example: uniform buffer, storage buffer, sampled image, combined image sampler, input attachment, acceleration structure).
+
+- **Descriptor Set:** a group of descriptors organized according to a layout (VkDescriptorSetLayout) that defines bindings (index, type, stage flags).
+- **Descriptor Pool:** memory from which descriptor sets are allocated.
+- **Lifecycle:** create a `DescriptorSetLayout` → allocate `DescriptorSet`s from a `DescriptorPool` → update with `vkUpdateDescriptorSets` → bind with `vkCmdBindDescriptorSets` before drawing.
+- **Common types:** uniform buffer (UBO), storage buffer (SSBO), sampled image, combined image sampler.
+- **Performance & synchronization:** reuse/pool descriptor sets; avoid writing to a set that is used by an in-flight command without proper synchronization; use memory barriers and correct buffer/image memory mapping/coherency to ensure visibility to shaders.
+
 ## Z-buffering
 
 ## Back-face culling
