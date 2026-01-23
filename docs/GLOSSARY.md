@@ -68,3 +68,13 @@ A descriptor is a structure describing a GPU resource accessible from a shader (
 ## Back-face culling
 
 ## Multisample anti-aliasing
+
+## Stencil Buffer
+
+Le tampon de stencil (stencil buffer) est un tampon par-pixel contenant des valeurs entières utilisées pour contrôler où le rendu est autorisé ou bloqué. En général il est utilisé conjointement avec le tampon de profondeur (z-buffer) pour:
+
+- Masquer des régions de l'écran (masques) afin d'éviter d'écrire certains pixels.
+- Réaliser des effets en plusieurs passes (ombres projetées, silhouettes, contours, découpage d'UI).
+- Combiner des opérations par-pixel avec des tests et des opérations de mise à jour (compare, replace, increment, decrement).
+
+Dans les APIs graphiques, on configure des opérations de stencil (référence, masque, opérations en cas de succès/échec) et on attache un tampon depth/stencil au framebuffer pour activer ce comportement.
