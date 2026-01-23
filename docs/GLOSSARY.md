@@ -29,6 +29,15 @@ Unified Memory Architecture is a design where the CPU and GPU share the same poo
 
 A rectangular region of the framebuffer that defines how normalized device coordinates (NDC) are mapped to screen-space coordinates. It controls the position, size, and depth range of rendered primitives on the screen.
 
+## Layout (Vulkan)
+
+In Vulkan, the layout of an image describes how its data is organized and accessed in GPU memory at a given moment. Each operation (copy, rendering, shader read, etc.) requires the image to be in a specific layout, for example:
+
+- `VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL`: optimal for receiving data during a copy operation.
+- `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`: optimal for reading by a shader.
+
+The layout must be explicitly managed by the application, using transitions (barriers), to ensure access validity and memory coherence. It allows the GPU driver to optimize memory access according to the current usage of the image.
+
 ## Z-buffering
 
 ## Back-face culling
