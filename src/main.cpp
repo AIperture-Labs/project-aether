@@ -300,6 +300,8 @@ class HelloTriangleApplication
 
     vk::raii::Image        textureImage       = nullptr;
     vk::raii::DeviceMemory textureImageMemory = nullptr;
+    vk::raii::ImageView    textureImageView   = nullptr;
+    vk::raii::Sampler      textureSampler     = nullptr;
 
     std::vector<vk::raii::Semaphore> presentCompleteSemaphores;
     std::vector<vk::raii::Semaphore> renderFinishedSemaphores;
@@ -340,6 +342,8 @@ class HelloTriangleApplication
         createGraphicsPipeline();
         createCommandPool();
         createTextureImage();
+        createTextureImageView();
+        createTextureSampler();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
@@ -538,11 +542,12 @@ class HelloTriangleApplication
                 });
 
             auto features = device.template getFeatures2<vk::PhysicalDeviceFeatures2,
-                                                                                    vk::PhysicalDeviceVulkan11Features,
+                                                                                    // TODO Remove: vk::PhysicalDeviceVulkan11Features,
                                                                                     vk::PhysicalDeviceVulkan13Features,
                                                                                     vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
             bool supportsRequiredFeatures =
-                features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
+                features.template get<vk::PhysicalDeviceFeatures2>().features.samplerAnisotropy &&
+                // TODO Remove: features.template get<vk::PhysicalDeviceVulkan11Features>().shaderDrawParameters &&
                 features.template get<vk::PhysicalDeviceVulkan13Features>().synchronization2 &&
                 features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering &&
                 features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>().extendedDynamicState;
@@ -596,12 +601,12 @@ class HelloTriangleApplication
 
         // query for Vulkan 1.3 features
         vk::StructureChain<vk::PhysicalDeviceFeatures2,
-                           vk::PhysicalDeviceVulkan11Features,
+                        //    vk::PhysicalDeviceVulkan11Features,
                            vk::PhysicalDeviceVulkan13Features,
                            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>
             featureChain = {
-                {},                                                            // vk::PhysicalDeviceFeatures2
-                {.shaderDrawParameters = vk::True},                            // vk::PhysicalDeviceVulkan11Features
+                {.features = {.samplerAnisotropy = vk::True}},  // vk::PhysicalDeviceFeatures2
+                // {.shaderDrawParameters = vk::True},  // vk::PhysicalDeviceVulkan11Features
                 {.synchronization2 = vk::True, .dynamicRendering = vk::True},  // vk::PhysicalDeviceVulkan13Features
                 {.extendedDynamicState = true}  // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
             };
@@ -925,6 +930,40 @@ class HelloTriangleApplication
         commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, {region});
         // Submit the buffer copy toe the graphics queue
         endSingleTimeCommands(commandBuffer);
+    }
+
+    void createTextureImageView()
+    {
+        textureImageView = createImageView(textureImage, vk::Format::eR8G8B8A8Srgb);
+    }
+
+    vk::raii::ImageView createImageView(vk::raii::Image &image, vk::Format format)
+    {
+        vk::ImageViewCreateInfo viewInfo{.image            = image,
+                                         .viewType         = vk::ImageViewType::e2D,
+                                         .format           = format,
+                                         .subresourceRange = {.aspectMask     = vk::ImageAspectFlagBits::eColor,
+                                                              .baseMipLevel   = 0,
+                                                              .levelCount     = 1,
+                                                              .baseArrayLayer = 0,
+                                                              .layerCount     = 1}};
+        return vk::raii::ImageView(device, viewInfo);
+    }
+
+    void createTextureSampler()
+    {
+        vk::PhysicalDeviceProperties properties = physicalDevice.getProperties();
+        vk::SamplerCreateInfo        samplerInfo{.magFilter        = vk::Filter::eLinear,
+                                                 .minFilter        = vk::Filter::eLinear,
+                                                 .mipmapMode       = vk::SamplerMipmapMode::eLinear,
+                                                 .addressModeU     = vk::SamplerAddressMode::eRepeat,
+                                                 .addressModeV     = vk::SamplerAddressMode::eRepeat,
+                                                 .addressModeW     = vk::SamplerAddressMode::eRepeat,
+                                                 .anisotropyEnable = vk::True,
+                                                 .maxAnisotropy    = properties.limits.maxSamplerAnisotropy,
+                                                 .compareEnable    = vk::False,
+                                                 .compareOp        = vk::CompareOp::eAlways};
+        textureSampler = vk::raii::Sampler(device, samplerInfo);
     }
 
     void createVertexBuffer()
