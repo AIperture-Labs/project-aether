@@ -335,7 +335,7 @@ class HelloTriangleApplication
         pickPhysicalDevice();
         createLogicalDevice();
         createSwapChain();
-        createImagesViews();
+        createImageViews();
         createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
@@ -637,7 +637,7 @@ class HelloTriangleApplication
         cleanupSwapChain();
 
         createSwapChain();
-        createImagesViews();
+        createImageViews();
     }
 
     void createSwapChain()
@@ -667,7 +667,7 @@ class HelloTriangleApplication
         swapChainImages = swapChain.getImages();
     }
 
-    void createImagesViews()
+    void createImageViews()
     {
         ZoneScoped;
         assert(swapChainImageViews.empty());
