@@ -4,7 +4,6 @@
 
 A graphics pipeline feature that restricts rendering to a rectangular region of the framebuffer. Fragments generated outside the scissor rectangle are discarded before being written to the render target. Commonly used for clipping, UI rendering, and performance optimization.
 
-
 ## Geometry Instancing
 
 A rendering technique that allows multiple instances of the same geometry to be drawn with a single draw call, while varying per-instance data such as position, orientation, scale, or material parameters. It reduces CPU overhead and improves performance when rendering many similar objects.
@@ -20,6 +19,10 @@ Base Address Register (BAR) is a PCIe mechanism that exposes device memory or I/
 ## SAM (Smart Access Memory)
 
 A technology that extends BAR by providing the GPU with direct access to a larger portion of system memory. This eliminates the need for staging buffers in many cases, as data can be copied directly from host memory to GPU VRAM.
+
+## Texels
+
+Texel (Texture Element) is the smallest unit of a texture map, analogous to a pixel in an image but representing a value in texture space. Texels are sampled by the GPU during texture mapping to determine the color or data applied to a fragment or vertex. The arrangement and filtering of texels affect the visual quality and detail of textured surfaces in 3D graphics.
 
 ## UMA (Unified Memory Architecture)
 
