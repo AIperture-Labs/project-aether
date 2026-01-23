@@ -12,6 +12,8 @@ CompileFlags:
     - -std=c++20
     - -Wall
     - -Wextra
+    - -DUNICODE
+    - -D_UNICODE
 
 Diagnostics:
   UnusedIncludes: Strict

@@ -30,6 +30,7 @@ import vulkan_hpp;
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 
+// Tracy
 #if defined(__clang__) || defined(__GNUC__)
 #define TracyFunction __PRETTY_FUNCTION__
 #elif defined(_MSC_VER)
@@ -136,12 +137,12 @@ class ImageJpeg
         return jpegBuf.size();
     }
 
-    inline size_t getWidth() const
+    inline uint32_t getWidth() const
     {
         return tj3Get(handle, TJPARAM_JPEGWIDTH);
     }
 
-    inline size_t getHeight() const
+    inline uint32_t getHeight() const
     {
         return tj3Get(handle, TJPARAM_JPEGHEIGHT);
     }
@@ -237,14 +238,15 @@ struct UniformBufferObject
     * @class SDLException
     * @brief Exception class for SDL-related errors.
     *
-    * This exception is thrown when an SDL function fails. It appends the SDL error message
-    * (from SDL_GetError()) to the provided message.
+    * This exception is thrown when an SDL function fails. It appends the SDL
+    * error message (from SDL_GetError()) to the provided message.
     */
 class SDLException : public std::runtime_error
 {
    public:
     /**
-     * @brief Constructs an SDLException with a custom message and the SDL error string.
+     * @brief Constructs an SDLException with a custom message and the SDL error
+     * string.
      * @param message The custom error message.
      */
     explicit SDLException(const std::string &message) : std::runtime_error(message + '\n' + SDL_GetError())
@@ -296,6 +298,9 @@ class HelloTriangleApplication
     vk::raii::CommandPool                commandPool = nullptr;
     std::vector<vk::raii::CommandBuffer> commandBuffers;
 
+    vk::raii::Image        textureImage       = nullptr;
+    vk::raii::DeviceMemory textureImageMemory = nullptr;
+
     std::vector<vk::raii::Semaphore> presentCompleteSemaphores;
     std::vector<vk::raii::Semaphore> renderFinishedSemaphores;
     std::vector<vk::raii::Fence>     inFlightFences;
@@ -334,6 +339,7 @@ class HelloTriangleApplication
         createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
+        createTextureImage();
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
@@ -413,7 +419,8 @@ class HelloTriangleApplication
         // Get the required extensions.
         auto requiredExtensions = getRequiredExtensions();
 
-        // Check if the required SDL extensions are supported by the Vulkan implementation.
+        // Check if the required SDL extensions are supported by the Vulkan
+        // implementation.
         auto extensionProperties = context.enumerateInstanceExtensionProperties();
         for (auto const &requiredExtension : requiredExtensions)
         {
@@ -475,7 +482,8 @@ class HelloTriangleApplication
     // This is an example how I could design my device selection by the score.
     // void scorePickPhysicalDevice() {
     //     auto devices = instance.enumeratePhysicalDevices();
-    //     if (devices.empty()) throw std::runtime_error("failed to find GPUs with Vulkan support!");
+    //     if (devices.empty()) throw std::runtime_error("failed to find GPUs with
+    //     Vulkan support!");
 
     //     std::multimap<int, vk::raii::PhysicalDevice> candidates;
 
@@ -485,7 +493,8 @@ class HelloTriangleApplication
     //         uint32_t score            = 0;
 
     //         // Discrete GPUs have a significante performance advantage
-    //         if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) score += 1000;
+    //         if (deviceProperties.deviceType ==
+    //         vk::PhysicalDeviceType::eDiscreteGpu) score += 1000;
 
     //         // Maximum possible size of textures affects graphics quality
     //         score += deviceProperties.limits.maxImageDimension2D;
@@ -551,19 +560,22 @@ class HelloTriangleApplication
     }
 
     // XXX: if have graphicQueue and presentationQueue separate check👇
-    // Example to use two queues if you want to have post-treatment of rendered images.
-    // See:
+    // Example to use two queues if you want to have post-treatment of rendered
+    // images. See:
     // https://docs.vulkan.org/tutorial/latest/03_Drawing_a_triangle/01_Presentation/00_Window_surface.html#_creating_the_presentation_queue
     void createLogicalDevice()
     {
         ZoneScoped;
-        // TODO: Consider implementing a dedicated transfer queue for buffer operations
+        // TODO: Consider implementing a dedicated transfer queue for buffer
+        // operations
         //       This would require:
-        //       1. Modifying queue family selection to find a queue with VK_QUEUE_TRANSFER_BIT
+        //       1. Modifying queue family selection to find a queue with
+        //       VK_QUEUE_TRANSFER_BIT
         //       2. Creating a separate command pool for transfer operations
         //       3. Setting resources to VK_SHARING_MODE_CONCURRENT
-        //       4. Submitting transfer commands to the transfer queue instead of graphics queue
-        //       This is more complex but can improve performance for large transfers
+        //       4. Submitting transfer commands to the transfer queue instead of
+        //       graphics queue This is more complex but can improve performance for
+        //       large transfers
 
         // find the index of the first queue family that supports graphics
         std::vector<vk::QueueFamilyProperties> queueFamilyProperties = physicalDevice.getQueueFamilyProperties();
@@ -774,20 +786,164 @@ class HelloTriangleApplication
         commandPool = vk::raii::CommandPool(device, poolInfo);
     }
 
+    void createTextureImage()
+    {
+        ZoneScoped;
+        ImageJpeg img("texture.jpg");
+
+        vk::raii::Buffer       stagingBuffer({});
+        vk::raii::DeviceMemory stagingBufferMemory({});
+        createBuffer(img.getSize(),
+                     vk::BufferUsageFlagBits::eTransferSrc,
+                     vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                     stagingBuffer,
+                     stagingBufferMemory);
+
+        void *data = stagingBufferMemory.mapMemory(0, img.getSize());
+        memcpy(data, img.getData(), img.getSize());
+        stagingBufferMemory.unmapMemory();
+
+        createImage(img.getWidth(),
+                    img.getHeight(),
+                    vk::Format::eR8G8B8A8Srgb,
+                    vk::ImageTiling::eOptimal,
+                    vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+                    vk::MemoryPropertyFlagBits::eDeviceLocal,
+                    textureImage,
+                    textureImageMemory);
+        transitionImageLayout(textureImage, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        copyBufferToImage(stagingBuffer, textureImage, img.getWidth(), img.getHeight());
+        transitionImageLayout(textureImage,
+                              vk::ImageLayout::eTransferDstOptimal,
+                              vk::ImageLayout::eShaderReadOnlyOptimal);
+    }
+
+    void createImage(uint32_t                width,
+                     uint32_t                height,
+                     vk::Format              format,
+                     vk::ImageTiling         tiling,
+                     vk::ImageUsageFlags     usage,
+                     vk::MemoryPropertyFlags properties,
+                     vk::raii::Image        &image,
+                     vk::raii::DeviceMemory &imageMemory)
+    {
+        vk::ImageCreateInfo imageInfo{.imageType   = vk::ImageType::e2D,
+                                      .format      = format,
+                                      .extent      = {width, height, 1},
+                                      .mipLevels   = 1,
+                                      .arrayLayers = 1,
+                                      .samples     = vk::SampleCountFlagBits::e1,
+                                      .tiling      = tiling,
+                                      .usage       = usage,
+                                      .sharingMode = vk::SharingMode::eExclusive};
+
+        image = vk::raii::Image(device, imageInfo);
+
+        vk::MemoryRequirements memRequirements = image.getMemoryRequirements();
+        vk::MemoryAllocateInfo allocInfo{.allocationSize  = memRequirements.size,
+                                         .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)};
+        imageMemory = vk::raii::DeviceMemory(device, allocInfo);
+        image.bindMemory(imageMemory, 0);
+    }
+
+    vk::raii::CommandBuffer beginSimgleTimeCommands()
+    {
+        vk::CommandBufferAllocateInfo allocInfo{.commandPool        = commandPool,
+                                                .level              = vk::CommandBufferLevel::ePrimary,
+                                                .commandBufferCount = 1};
+        // Allocate a temporary command buffer for the one-time transfer operation
+        // from staging buffer (CPU-accessible) to the final vertex buffer
+        // (GPU-local). This buffer is temporary and will be automatically destroyed
+        // after the copy operation completes. Unlike the persistent command buffers
+        // used for rendering, this buffer is created and used exclusively for data
+        // staging and is not reused.
+        vk::raii::CommandBuffer commandBuffer = std::move(device.allocateCommandBuffers(allocInfo).front());
+
+        vk::CommandBufferBeginInfo beginInfo{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+        commandBuffer.begin(beginInfo);
+
+        return commandBuffer;
+    }
+
+    void endSingleTimeCommands(vk::raii::CommandBuffer &commandBuffer)
+    {
+        commandBuffer.end();
+
+        vk::SubmitInfo submitInfo{.commandBufferCount = 1, .pCommandBuffers = &*commandBuffer};
+        queue.submit(submitInfo, nullptr);
+        queue.waitIdle();
+    }
+
+    void transitionImageLayout(const vk::raii::Image &image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+    {
+        auto commandBuffer = beginSimgleTimeCommands();
+
+        vk::ImageMemoryBarrier barrier{.oldLayout        = oldLayout,
+                                       .newLayout        = newLayout,
+                                       .image            = image,
+                                       .subresourceRange = {vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1}};
+
+        vk::PipelineStageFlags sourceStage;
+        vk::PipelineStageFlags destinationStage;
+
+        if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eTransferDstOptimal)
+        {
+            barrier.srcAccessMask = {};
+            barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+
+            sourceStage      = vk::PipelineStageFlagBits::eTopOfPipe;
+            destinationStage = vk::PipelineStageFlagBits::eTransfer;
+        }
+        else if (oldLayout == vk::ImageLayout::eTransferDstOptimal &&
+                 newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+        {
+            barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+            barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+            sourceStage      = vk::PipelineStageFlagBits::eTransfer;
+            destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
+        }
+        else
+        {
+            throw std::invalid_argument("unsupported layout transition!");
+        }
+
+        commandBuffer.pipelineBarrier(sourceStage, destinationStage, {}, {}, nullptr, barrier);
+        endSingleTimeCommands(commandBuffer);
+    }
+
+    void copyBufferToImage(const vk::raii::Buffer &buffer, vk::raii::Image &image, uint32_t width, uint32_t height)
+    {
+        vk::raii::CommandBuffer commandBuffer = beginSimgleTimeCommands();
+
+        vk::BufferImageCopy region{.bufferOffset      = 0,
+                                   .bufferRowLength   = 0,
+                                   .bufferImageHeight = 0,
+                                   .imageSubresource  = {vk::ImageAspectFlagBits::eColor, 0, 0, 1},
+                                   .imageOffset       = {0, 0, 0},
+                                   .imageExtent       = {width, height, 1}};
+        commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, {region});
+        // Submit the buffer copy toe the graphics queue
+        endSingleTimeCommands(commandBuffer);
+    }
+
     void createVertexBuffer()
     {
-        // TODO: Consider combining vertex and index buffers into a single allocation for better cache locality
-        //       and memory efficiency. This follows Vulkan best practices where multiple buffers are stored
-        //       in a single VkBuffer with offsets, making data more cache-friendly and potentially
-        //       allowing memory reuse through aliasing when resources aren't used simultaneously.
+        // TODO: Consider combining vertex and index buffers into a single
+        // allocation for better cache locality
+        //       and memory efficiency. This follows Vulkan best practices where
+        //       multiple buffers are stored in a single VkBuffer with offsets,
+        //       making data more cache-friendly and potentially allowing memory
+        //       reuse through aliasing when resources aren't used simultaneously.
         //       See:
         //       https://vulkan.lunarg.com/doc/sdk/1.3.280.0/windows/html/vkspec.html#VUID-vkCmdBindVertexBuffers-pVertexBuffers-0x20
         vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
         // XXX: Staging buffers are used here to copy data from host-visible memory
         // to device-local memory because many GPUs historically couldn't access
-        // system memory directly. On systems with Resizable BAR / Smart Access Memory
-        // or UMA, explicit staging may be unnecessary or suboptimal. See discussion:
+        // system memory directly. On systems with Resizable BAR / Smart Access
+        // Memory or UMA, explicit staging may be unnecessary or suboptimal. See
+        // discussion:
         // https://www.reddit.com/r/vulkan/comments/1qad9io/continuing_with_the_official_tutorial/
         // Create staging buffer using createBuffer helper
         vk::raii::Buffer       stagingBuffer({});
@@ -896,20 +1052,9 @@ class HelloTriangleApplication
 
     void copyBuffer(vk::raii::Buffer &srcBuffer, vk::raii::Buffer &dstBuffer, vk::DeviceSize size)
     {
-        vk::CommandBufferAllocateInfo allocInfo{.commandPool        = commandPool,
-                                                .level              = vk::CommandBufferLevel::ePrimary,
-                                                .commandBufferCount = 1};
-        // Allocate a temporary command buffer for the one-time transfer operation from staging buffer (CPU-accessible)
-        // to the final vertex buffer (GPU-local). This buffer is temporary and will be automatically destroyed
-        // after the copy operation completes. Unlike the persistent command buffers used for rendering,
-        // this buffer is created and used exclusively for data staging and is not reused.
-        vk::raii::CommandBuffer commandCopyBuffer = std::move(device.allocateCommandBuffers(allocInfo).front());
-
-        commandCopyBuffer.begin(vk::CommandBufferBeginInfo{.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit});
+        vk::raii::CommandBuffer commandCopyBuffer = beginSimgleTimeCommands();
         commandCopyBuffer.copyBuffer(srcBuffer, dstBuffer, vk::BufferCopy(0, 0, size));
-        commandCopyBuffer.end();
-        queue.submit(vk::SubmitInfo{.commandBufferCount = 1, .pCommandBuffers = &*commandCopyBuffer}, nullptr);
-        queue.waitIdle();
+        endSingleTimeCommands(commandCopyBuffer);
     }
 
     void createBuffer(vk::DeviceSize          size,
@@ -955,7 +1100,8 @@ class HelloTriangleApplication
         auto &commandBuffer = commandBuffers[frameIndex];
         commandBuffer.begin({});
 
-        // Before starting rendering, transition the swapchain image to COLOR_ATTACHMENT_OPTIMAL
+        // Before starting rendering, transition the swapchain image to
+        // COLOR_ATTACHMENT_OPTIMAL
         transition_image_layout(imageIndex,
                                 vk::ImageLayout::eUndefined,
                                 vk::ImageLayout::eColorAttachmentOptimal,
@@ -1070,9 +1216,9 @@ class HelloTriangleApplication
                              static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height),
                              0.1f,
                              10.0f);
-        // GLM was originally designed for OpenGL, where the Y coordinate of the clip
-        // coordinates is inverted. Flip the sign on the Y-axis scaling factor in the
-        // projection matrix so the final image isn't rendered upside down.
+        // GLM was originally designed for OpenGL, where the Y coordinate of the
+        // clip coordinates is inverted. Flip the sign on the Y-axis scaling factor
+        // in the projection matrix so the final image isn't rendered upside down.
         ubo.proj[1][1] *= -1;
 
         memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
