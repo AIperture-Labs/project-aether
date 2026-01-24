@@ -49,8 +49,14 @@ AlignTrailingComments: true
 PointerAlignment: Right
 ReferenceAlignment: Right
 
+# Preprocessor directives indentation: indent directives according to surrounding code
+# Options: None, AfterHash, BeforeHash
+IndentPPDirectives: AfterHash
+
 # Misc engine hygiene
 SortUsingDeclarations: true
 AlwaysBreakTemplateDeclarations: Yes
 BreakConstructorInitializers: AfterColon
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
+
+SeparateDefinitionBlocks: Always
