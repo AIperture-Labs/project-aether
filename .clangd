@@ -14,6 +14,7 @@ CompileFlags:
     - -Wextra
     - -DUNICODE
     - -D_UNICODE
+    - -IC:/VulkanSDK/1.4.335.0/Include/
 
 Diagnostics:
   UnusedIncludes: Strict
@@ -33,5 +34,5 @@ InlayHints:
 Completion:
   AllScopes: true
   ArgumentLists: FullPlaceholders
-  HeaderInsertion: Never
+  HeaderInsertion: IWYU
   CodePatterns: All
