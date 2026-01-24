@@ -103,7 +103,7 @@ if(ENABLE_CPP20_MODULE)
 endif()
 
 find_package(glm CONFIG REQUIRED)
-find_package(Vulkan REQUIRED)
+find_package(Vulkan 1.4.335 REQUIRED) # Require Vulkan SDK version 1.4.335 or higher
 find_package(SDL3 CONFIG REQUIRED)
 # find_package(JPEG REQUIRED) if I'm using the legacy libjpeg low level api
 find_package(libjpeg-turbo CONFIG REQUIRED)
