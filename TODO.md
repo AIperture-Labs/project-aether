@@ -27,6 +27,7 @@
 ### 🛠 **IDE & Tooling**
 - [ ] Switch to **clangd** for better IntelliSense
 - [ ] Clean up `compile_commands.json` (remove old entries)
+- [ ] Review placement of installation configs like `.vsconfig`
 
 ### 📁 **Project Structure**
 - [ ] Move all settings to `configs/` folder
