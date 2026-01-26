@@ -25,7 +25,7 @@ CMakeUserPresets.json
 *.slo
 *.lo
 *.o
-*.obj
+out/**/*.obj
 
 # Precompiled Headers
 *.gch
