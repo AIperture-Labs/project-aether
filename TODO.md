@@ -8,6 +8,8 @@
 - [ ] Add **testing framework**
 - [ ] Add **coverage reporting**
 - [x] Enable **ASAN (Address Sanitizer)**
+ - [ ] Introduce project-level export macro **AETHER_DECLSPEC** (replace `JPEG_API`) and update headers/CMake
+- [ ] Add git submodule switch for **thirdparty** (CMake option `GIT_SUBMODULE_THIRDPARTY`)
 
 ### 📝 **Code Formatting & Linting**
 - [ ] Fix **clang-format** configuration for Slang language files (`.slang`)
@@ -52,9 +54,8 @@
 ## 🔄 **Refactoring**
 
 ### 🔄 **Codebase Improvements**
-- [ ] Refactor **shader pipeline** for better modularity
-- [ ] Optimize **Vulkan resource management**
+ - [ ] Add support for direct memory access from (re)BAR/SAM/UMA instead of staging buffers. Staging is now largely obsolete and direct access can be used in various cases.
+ - [ ] Improve error handling throughout the codebase
 
 ### 📦 **Dependency Management**
-- [ ] Update **vcpkg** configuration
 - [ ] Optimize **CMake dependency handling**
