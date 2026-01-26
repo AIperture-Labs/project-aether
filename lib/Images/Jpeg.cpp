@@ -1,12 +1,16 @@
 #include "Jpeg.hpp"
 
-#include <fstream>
+#include <cstdint>
 #include <stdexcept>
+
+#include "Utils/Handlers.hpp"
+
 
 namespace Images {
 
-JPEG_API Jpeg::Jpeg(const std::string &filename, TJPF pixelFormat) :
-    handle(tj3Init(TJINIT_DECOMPRESS)), filename(filename), jpegBuf(readJpeg(filename)), pixelFormat(pixelFormat)
+PROJECT_API Jpeg::Jpeg(const std::string &filename, TJPF pixelFormat) :
+    handle(tj3Init(TJINIT_DECOMPRESS)), filename(filename),
+    jpegBuf(Utils::Handlers::File::getBuffer<uint8_t>(filename)), pixelFormat(pixelFormat)
 {
     if (handle == nullptr)
     {
@@ -22,7 +26,7 @@ JPEG_API Jpeg::Jpeg(const std::string &filename, TJPF pixelFormat) :
     }
 }
 
-JPEG_API Jpeg::~Jpeg(void)
+PROJECT_API Jpeg::~Jpeg(void)
 {
     tj3Destroy(handle);
 }
@@ -62,7 +66,7 @@ inline size_t Jpeg::getSize() const
     return getWidth() * getHeight() * getPixelSize();
 }
 
-JPEG_API int32_t Jpeg::decompress()
+PROJECT_API int32_t Jpeg::decompress()
 {
     if (getDataPrecision() == DATA_PRECISION_8_BITS)
     {
@@ -96,23 +100,6 @@ JPEG_API int32_t Jpeg::decompress()
     {
         return -1;
     }
-}
-
-JPEG_API std::vector<uint8_t> Jpeg::readJpeg(const std::string &filename)
-{
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open())
-    {
-        throw std::runtime_error("failed to open file!");
-    }
-
-    std::vector<char> buffer(file.tellg());
-    file.seekg(0, std::ios::beg);
-    file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-    file.close();
-
-    return std::vector<uint8_t>(buffer.begin(), buffer.end());
 }
 
 }  // namespace Images

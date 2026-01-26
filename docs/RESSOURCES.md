@@ -17,6 +17,7 @@
 - [Clang-format example from Blender](https://github.com/blender/blender/blob/main/.clang-format)
 - [Clang-tidy example from Blender](https://github.com/blender/blender/blob/main/.clang-tidy)
 - [CPPcheck website](https://cppcheck.sourceforge.io/)
+- [Exporting from a DLL using __declspec(dllexport)](https://learn.microsoft.com/en-us/cpp/build/exporting-from-a-dll-using-declspec-dllexport?view=msvc-170)
 
 ## SDK & Libraries
 - [Vulkan SDK Website](https://vulkan.lunarg.com/)

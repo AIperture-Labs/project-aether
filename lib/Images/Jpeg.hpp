@@ -1,24 +1,16 @@
 #pragma once
 
-#if defined(_WIN32)
-#    if defined(JPEG_BUILD_DLL)
-#        define JPEG_API __declspec(dllexport)
-#    else
-#        define JPEG_API __declspec(dllimport)
-#    endif
-#else
-#    define JPEG_API
-#endif
-
 #include <turbojpeg.h>
 
 #include <string>
 #include <variant>
 #include <vector>
 
+#include "config.hpp"
+
 namespace Images {
 
-class JPEG_API Jpeg
+class PROJECT_API Jpeg
 {
     // Members
    public:
@@ -55,9 +47,6 @@ class JPEG_API Jpeg
     inline size_t      getSize() const;
 
     int32_t decompress();
-
-   private:
-    static std::vector<uint8_t> readJpeg(const std::string &filename);
 };
 
 }  // namespace Images
