@@ -22,3 +22,13 @@ target_include_directories(Vertex
 target_sources(Vertex INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Vextex.hpp)
 target_link_libraries(Vertex INTERFACE Vulkan::cppm glm::glm)
 add_library(Geometry::Vertex ALIAS Vertex)
+
+add_library(Utils SHARED Utils/Handlers.cpp)
+target_include_directories(Utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(Utils Project::Config)
+set_target_properties(Utils PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/src
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    CXX_STANDARD 20
+)
