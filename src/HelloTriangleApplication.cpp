@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <fstream>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
@@ -39,6 +38,7 @@ import vulkan_hpp;
 
 #include "Geometry/Vextex.hpp"
 #include "Images/Jpeg.hpp"
+#include "Utils/Handlers.hpp"
 
 void HelloTriangleApplication::initWindow()
 {
@@ -438,7 +438,7 @@ void HelloTriangleApplication::createGraphicsPipeline()
 {
     ZoneScoped;
     std::string filename   = "slang.spv";
-    auto        shaderCode = readFile(filename);
+    auto        shaderCode = Utils::Handlers::File::getBuffer<char>(filename);
 
 #if defined(_DEBUG)
     std::cout << "Shader Buffer Size(" << filename << "): " << shaderCode.size() * sizeof(char) << std::endl;
@@ -1261,23 +1261,6 @@ bool HelloTriangleApplication::isDeviceSuitable(vk::raii::PhysicalDevice physica
     auto deviceFeatures   = physicalDevice.getFeatures();
 
     return (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu && deviceFeatures.geometryShader);
-}
-
-std::vector<char> HelloTriangleApplication::readFile(const std::string &filename)
-{
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open())
-    {
-        throw std::runtime_error("failed to open file!");
-    }
-
-    std::vector<char> buffer(file.tellg());
-    file.seekg(0, std::ios::beg);
-    file.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
-    file.close();
-
-    return buffer;
 }
 
 void HelloTriangleApplication::run()

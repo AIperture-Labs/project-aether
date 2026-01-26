@@ -30,6 +30,7 @@ import vulkan_hpp;
 #include <tracy/Tracy.hpp>
 
 #include "Geometry/Vextex.hpp"
+#include "Utils/Handlers.hpp"
 
 const std::vector<char const *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -237,8 +238,6 @@ class HelloTriangleApplication
                                                           void *);
 
     bool isDeviceSuitable(vk::raii::PhysicalDevice physicalDevice);
-
-    static std::vector<char> readFile(const std::string &filename);
 
    public:
     void run();
