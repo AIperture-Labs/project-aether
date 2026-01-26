@@ -1,7 +1,11 @@
 add_library(Jpeg SHARED Images/Jpeg.cpp)
 target_include_directories(Jpeg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}) # expose headers to consumers
-target_link_libraries(Jpeg $<IF:$<TARGET_EXISTS:libjpeg-turbo::turbojpeg>,libjpeg-turbo::turbojpeg,libjpeg-turbo::turbojpeg-static>)
-target_compile_definitions(Jpeg PRIVATE JPEG_BUILD_DLL) # control __declspec(dllexport)
+target_link_libraries(
+    Jpeg
+    Project::Config
+    $<IF:$<TARGET_EXISTS:libjpeg-turbo::turbojpeg>,libjpeg-turbo::turbojpeg,libjpeg-turbo::turbojpeg-static>
+    Utils
+)
 # Place generated DLL next to the executable build output so the loader can find it at runtime.
 set_target_properties(Jpeg PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/src
@@ -22,6 +26,19 @@ target_include_directories(Vertex
 target_sources(Vertex INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Vextex.hpp)
 target_link_libraries(Vertex INTERFACE Vulkan::cppm glm::glm)
 add_library(Geometry::Vertex ALIAS Vertex)
+
+add_library(Obj SHARED Loaders/Obj.cpp)
+target_include_directories(Obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(Obj PRIVATE OBJ_BUILD_DLL) # control __declspec(dllexport)
+target_link_libraries(Obj Project::Config)
+# Place generated DLL next to the executable build output so the loader can find it at runtime.
+set_target_properties(Obj PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/src
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    CXX_STANDARD 20
+)
+add_library(Loaders::Obj ALIAS Obj)
 
 add_library(Utils SHARED Utils/Handlers.cpp)
 target_include_directories(Utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

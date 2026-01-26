@@ -16,11 +16,12 @@ target_include_directories(Main PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 # target_link_libraries(Main Vulkan::cppm SDL3::SDL3 JPEG::JPEG) if I'm using the legacy libjpeg low level
 target_link_libraries(
     Main
-    Vulkan::cppm
-    SDL3::SDL3
-    Images::Jpeg
-    Geometry::Vertex
     $<IF:$<TARGET_EXISTS:libjpeg-turbo::turbojpeg>,libjpeg-turbo::turbojpeg,libjpeg-turbo::turbojpeg-static>
+    Geometry::Vertex
+    Images::Jpeg
+    SDL3::SDL3
+    Utils
+    Vulkan::cppm
 )
 if(ENABLE_CPP20_MODULE)
     target_compile_definitions(Main PRIVATE USE_CPP20_MODULES=1)
