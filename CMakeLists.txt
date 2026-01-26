@@ -10,10 +10,15 @@ project(
     VERSION 0.1.0
 )
 
+# Includes
+# include(cmake/GitSubmodule.cmake)
+
 # C++ Settings
 set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ standard to use")
 set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE BOOL "Require C++ standard")
 set(CMAKE_CXX_EXTENSIONS OFF CACHE BOOL "Disable compiler-specific extensions")
+
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 
