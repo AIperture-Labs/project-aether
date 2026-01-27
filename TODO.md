@@ -10,6 +10,7 @@
 - [x] Enable **ASAN (Address Sanitizer)**
  - [ ] Introduce project-level export macro **AETHER_DECLSPEC** (replace `JPEG_API`) and update headers/CMake
 - [ ] Add git submodule switch for **thirdparty** (CMake option `GIT_SUBMODULE_THIRDPARTY`)
+- [ ] Add **IWYU (Include What You Use)** as a thirdparty tool
 
 ### 📝 **Code Formatting & Linting**
 - [ ] Fix **clang-format** configuration for Slang language files (`.slang`)
@@ -23,6 +24,7 @@
 - [ ] Enable **C++20 modules**
 - [ ] Update **C++ version to C++23**
 - [ ] Update **C version to C23**
+ - [ ] Unifier les `cxx_std_20` soit en `compile_features` soit en `properties` (CMake)
 
 ### 🛠 **IDE & Tooling**
 - [ ] Switch to **clangd** for better IntelliSense
