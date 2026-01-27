@@ -53,3 +53,6 @@
 - [Anisotropic Filtering (Wikipedia)](https://en.wikipedia.org/wiki/Anisotropic_filtering) — Explains anisotropic filtering, its benefits for texture clarity at oblique viewing angles, and how it works in graphics pipelines.
    - [Heightmap (Wikipedia)](https://en.wikipedia.org/wiki/Heightmap) — Overview of heightmaps used to represent terrain elevation as grayscale images; commonly used for terrain rendering and procedural generation.
    - [Stencil buffer (Wikipedia)](https://en.wikipedia.org/wiki/Stencil_buffer) — Article explaining the stencil buffer, a per-pixel mask used to control rendering.
+
+## C++ & Templates
+- [ISO C++ FAQ - Templates](https://isocpp.org/wiki/faq/templates)
