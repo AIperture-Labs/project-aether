@@ -12,12 +12,15 @@ project(
 )
 
 # Includes
-# include(cmake/GitSubmodule.cmake)
+# include(GitSubmodule)
+
+set(AETHER_ENGINE_ASSETS_FOLDER)
 
 # C++ Settings
 set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ standard to use")
 set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE BOOL "Require C++ standard")
 set(CMAKE_CXX_EXTENSIONS OFF CACHE BOOL "Disable compiler-specific extensions")
+# set(CMAKE_CXX_MODULE_STD 1)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
@@ -55,10 +58,13 @@ function(enable_sanitizers TARGET)
     endif()
 endfunction()
 
-option(ENABLE_TESTING "Enable the building of the test" OFF)
-if(ENABLE_TESTING)
+option(ENABLE_BUILD_TESTING "Enable the building of the test" OFF)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
-    enable_testing()
+endif()
+
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR ENABLE_BUILD_TESTING) AND BUILD_TESTING)
+    add_subdirectory(tests)
 
     # Coverage
     option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang" OFF)

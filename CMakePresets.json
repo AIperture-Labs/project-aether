@@ -73,7 +73,8 @@
             "inherits": "base-clang",
             "description": "x64 build using Clang in Release mode",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_BUILD_TESTING": "OFF"
             }
         },
         {
@@ -81,7 +82,8 @@
             "inherits": "base-clang",
             "description": "x64 build using Clang in RelWithDebInfo mode",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ENABLE_BUILD_TESTING": "OFF"
             }
         },
         {
@@ -89,7 +91,8 @@
             "inherits": "base-clang",
             "description": "x64 build using Clang in MinSizeRel mode",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "MinSizeRel"
+                "CMAKE_BUILD_TYPE": "MinSizeRel",
+                "ENABLE_BUILD_TESTING": "OFF"
             }
         },
         {
@@ -106,7 +109,8 @@
             "inherits": "base-clang-cl",
             "description": "x64 build using clang-cl in Release mode",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_BUILD_TESTING": "OFF"
             }
         },
         {
@@ -114,7 +118,8 @@
             "inherits": "base-clang-cl",
             "description": "x64 build using clang-cl in RelWithDebInfo mode",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ENABLE_BUILD_TESTING": "OFF"
             }
         },
         {
@@ -122,7 +127,8 @@
             "inherits": "base-clang-cl",
             "description": "x64 build using clang-cl in MinSizeRel mode",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "MinSizeRel"
+                "CMAKE_BUILD_TYPE": "MinSizeRel",
+                "ENABLE_BUILD_TESTING": "OFF"
             }
         },
         {
@@ -138,7 +144,8 @@
             "inherits": "base-msvc",
             "description": "x64 build using MSVC in Release mode",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_BUILD_TESTING": "OFF"
             }
         },
         {
@@ -146,7 +153,8 @@
             "inherits": "base-msvc",
             "description": "x64 build using MSVC in RelWithDebInfo mode",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "ENABLE_BUILD_TESTING": "OFF"
             }
         },
         {
@@ -154,7 +162,8 @@
             "inherits": "base-msvc",
             "description": "x64 build using MSVC in MinSizeRel mode",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "MinSizeRel"
+                "CMAKE_BUILD_TYPE": "MinSizeRel",
+                "ENABLE_BUILD_TESTING": "OFF"
             }
         }
     ],
@@ -238,6 +247,14 @@
             "configurePreset": "x64-minsizerel-msvc",
             "inherits": "verbose",
             "description": "Verbose build for x64-minsizerel-msvc"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "Test1",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "x64-debug-clang"
         }
     ]
 }

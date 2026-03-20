@@ -1,6 +1,7 @@
 // Copyright (c) 2025 AIperture-Labs <xavier.beheydt@gmail.com>
 // SPDX-License-Identifier: MIT
 // main.cpp
+#include "HelloTriangleApplication.hpp"
 
 #include <iostream>
 
@@ -12,7 +13,7 @@
 #endif
 #include <tracy/Tracy.hpp>
 
-#include "HelloTriangleApplication.hpp"
+#include "Loaders/Obj.hpp"
 
 int main()
 {
@@ -20,6 +21,8 @@ int main()
     ZoneScoped;
 #endif
     HelloTriangleApplication app;
+
+    obj_test();
 
     try
     {
