@@ -1,4 +1,9 @@
-add_library(Jpeg SHARED Images/Jpeg.cpp)
+add_library(
+    Jpeg
+    SHARED
+    Images/Jpeg.hpp
+    Images/Jpeg.cpp
+)
 target_include_directories(Jpeg PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}) # expose headers to consumers
 target_link_libraries(
     Jpeg
@@ -23,13 +28,21 @@ target_include_directories(Vertex
     ${CMAKE_CURRENT_SOURCE_DIR}/Geometry
     ${Vulkan_INCLUDE_DIR}
 )
-target_sources(Vertex INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Vextex.hpp)
+target_sources(
+    Vertex
+    INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Vextex.hpp
+)
 target_link_libraries(Vertex INTERFACE Vulkan::cppm glm::glm)
 add_library(Geometry::Vertex ALIAS Vertex)
 
-add_library(Obj SHARED Loaders/Obj.cpp)
+add_library(
+    Obj
+    SHARED
+    Loaders/Obj.hpp
+    Loaders/Obj.cpp
+    )
 target_include_directories(Obj PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_compile_definitions(Obj PRIVATE OBJ_BUILD_DLL) # control __declspec(dllexport)
 target_link_libraries(Obj Project::Config)
 # Place generated DLL next to the executable build output so the loader can find it at runtime.
 set_target_properties(Obj PROPERTIES
@@ -40,7 +53,12 @@ set_target_properties(Obj PROPERTIES
 )
 add_library(Loaders::Obj ALIAS Obj)
 
-add_library(Utils SHARED Utils/Handlers.cpp)
+add_library(
+    Utils
+    SHARED
+    Utils/Files/Handlers.hpp
+    Utils/Files/Handlers.cpp
+)
 target_include_directories(Utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(Utils Project::Config)
 set_target_properties(Utils PROPERTIES

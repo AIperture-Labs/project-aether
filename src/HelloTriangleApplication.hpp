@@ -30,7 +30,6 @@ import vulkan_hpp;
 #include <tracy/Tracy.hpp>
 
 #include "Geometry/Vextex.hpp"
-#include "Utils/Handlers.hpp"
 
 const std::vector<char const *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
 

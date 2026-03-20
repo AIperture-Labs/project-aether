@@ -19,6 +19,7 @@ target_link_libraries(
     $<IF:$<TARGET_EXISTS:libjpeg-turbo::turbojpeg>,libjpeg-turbo::turbojpeg,libjpeg-turbo::turbojpeg-static>
     Geometry::Vertex
     Images::Jpeg
+    Loaders::Obj
     SDL3::SDL3
     Utils
     Vulkan::cppm
